@@ -3,7 +3,7 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, Gtk
 from pages.appearance import AppearancePage
 from pages.dock import DockPage
-from pages.bar import BarPage
+# from pages.bar import BarPage
 
 class KiwiSettingsWindow(Adw.ApplicationWindow):
     def __init__(self, **kwargs):
@@ -22,7 +22,7 @@ class KiwiSettingsWindow(Adw.ApplicationWindow):
         self.pages = {
             "Appearance": AppearancePage(),
             "Dock": DockPage(),
-            "Bar": BarPage(),
+            # "Bar": BarPage(),
         }
 
         self.content_view = Adw.ViewStack()
@@ -43,7 +43,7 @@ class KiwiSettingsWindow(Adw.ApplicationWindow):
 
         # Split view
         split = Adw.NavigationSplitView()
-        split.set_sidebar(Adw.NavigationPage.new(sidebar_box, "Kiwi Settings"))
+        split.set_sidebar(Adw.NavigationPage.new(sidebar_box, "Settings"))
         split.set_content(Adw.NavigationPage.new(content_box, "Settings"))
 
         self.set_content(split)

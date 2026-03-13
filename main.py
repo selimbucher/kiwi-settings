@@ -1,12 +1,15 @@
+import gi
+gi.require_version("Adw", "1")
 from gi.repository import Adw
+from window import KiwiSettingsWindow
 
-class AppearancePage(Adw.PreferencesPage):
+class App(Adw.Application):
     def __init__(self):
-        super().__init__()
-        self.set_icon_name("preferences-desktop-appearance-symbolic")
+        super().__init__(application_id="io.github.selimovic.kiwi-settings")
+        self.connect("activate", self.on_activate)
 
-        group = Adw.PreferencesGroup(title="Theme")
-        self.add(group)
+    def on_activate(self, app):
+        win = KiwiSettingsWindow(application=app)
+        win.present()
 
-        group.add(Adw.SwitchRow(title="Dark Mode"))
-        # add more rows...
+App().run()
