@@ -13,8 +13,8 @@ class HueStrip(Gtk.Widget):
         super().__init__()
         self.on_color_changed = on_color_changed
         
-        hex_color = get("primary_color", "#ff8040")
-        h, l = self._hex_to_hl(hex_color)
+        color = get("primary_color", "rgb(190,157,241)")
+        h, l = self._css_to_hl(color)
         self.hue = h
         self.lightness = max(self.L_MIN, min(self.L_MAX, l))
 
@@ -38,11 +38,12 @@ class HueStrip(Gtk.Widget):
         click.connect("pressed", self._on_click)
         self.add_controller(click)
 
-    def _hex_to_hl(self, hex_color: str):
-        hex_color = hex_color.lstrip("#")
-        r = int(hex_color[0:2], 16) / 255
-        g = int(hex_color[2:4], 16) / 255
-        b = int(hex_color[4:6], 16) / 255
+    def _css_to_hl(self, color_str: str):
+        """Parse any valid CSS color string and return (hue, lightness) in [0,1]."""
+        rgba = Gdk.RGBA()
+        if not rgba.parse(color_str):
+            return 0.08, 0.72  # fallback: orange-ish
+        r, g, b = rgba.red, rgba.green, rgba.blue
         max_c = max(r, g, b)
         min_c = min(r, g, b)
         l = (max_c + min_c) / 2
@@ -56,7 +57,7 @@ class HueStrip(Gtk.Widget):
         else:
             h = (r - g) / d + 4
         return h / 6, l
-    
+
     def do_measure(self, orientation, for_size):
         return self._canvas.measure(orientation, for_size)
 
@@ -83,10 +84,10 @@ class HueStrip(Gtk.Widget):
 
         r = 8
         cr.new_path()
-        cr.arc(r,         r,          r, math.pi,       3 * math.pi / 2)
+        cr.arc(r,         r,          r, math.pi,         3 * math.pi / 2)
         cr.arc(width - r, r,          r, 3 * math.pi / 2, 2 * math.pi)
-        cr.arc(width - r, height - r, r, 0,              math.pi / 2)
-        cr.arc(r,         height - r, r, math.pi / 2,   math.pi)
+        cr.arc(width - r, height - r, r, 0,               math.pi / 2)
+        cr.arc(r,         height - r, r, math.pi / 2,     math.pi)
         cr.close_path()
         cr.clip()
 
