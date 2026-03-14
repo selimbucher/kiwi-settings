@@ -1,4 +1,4 @@
-from gi.repository import Adw, Gtk, Gdk
+from gi.repository import Adw, Gtk, Gdk, Gio
 from config import get, set as set_conf, write_conf
 from widgets.hue_strip import HueStrip
 
@@ -8,14 +8,17 @@ class AppearancePage(Adw.PreferencesPage):
         super().__init__()
         self.set_icon_name("preferences-desktop-appearance-symbolic")
 
+        self._desktop_settings = Gio.Settings(schema="org.gnome.desktop.interface")
+
         theme_group = Adw.PreferencesGroup(title="Theme")
         self.add(theme_group)
 
         dark_row = Adw.SwitchRow(title="Dark Mode")
-        dark_row.set_active(get("dark_mode", True))
+        dark_row.set_active(
+            self._desktop_settings.get_string("color-scheme") == "prefer-dark"
+        )
         dark_row.connect("notify::active", self.on_dark_mode_changed)
         theme_group.add(dark_row)
-        self._apply_dark_mode(get("dark_mode", True))
 
         options = Gtk.StringList.new(["Dark", "Glass"])
         theme_row = Adw.ComboRow(title="Kiwi Theme", model=options)
@@ -34,7 +37,6 @@ class AppearancePage(Adw.PreferencesPage):
         self._color_button.add_css_class("circular")
         self._update_color_button()
 
-        # Popover with hue strip
         popover = Gtk.Popover()
         popover.set_parent(self._color_button)
         popover.set_position(Gtk.PositionType.BOTTOM)
@@ -81,17 +83,12 @@ class AppearancePage(Adw.PreferencesPage):
         set_conf("primary_color", hex_color)
         write_conf()
         self._update_color_button()
-        
-    def _apply_dark_mode(self, active: bool):
-        Adw.StyleManager.get_default().set_color_scheme(
-            Adw.ColorScheme.PREFER_DARK if active else Adw.ColorScheme.PREFER_LIGHT
-        )
 
     def on_dark_mode_changed(self, row, _):
-        active = row.get_active()
-        self._apply_dark_mode(active)
-        set_conf("dark_mode", active)
-        write_conf()
+        self._desktop_settings.set_string(
+            "color-scheme",
+            "prefer-dark" if row.get_active() else "default"
+        )
 
     def on_theme_changed(self, row, _):
         set_conf("theme", row.get_selected_item().get_string().lower())
