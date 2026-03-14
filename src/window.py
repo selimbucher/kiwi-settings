@@ -37,8 +37,12 @@ class KiwiSettingsWindow(Adw.ApplicationWindow):
         sidebar_box.append(scroll)
 
         # Content header
+        self.content_header = Adw.HeaderBar(css_classes=["flat"])
+        self.content_title = Adw.WindowTitle(title="Appearance")
+        self.content_header.set_title_widget(self.content_title)
+
         content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        content_box.append(Adw.HeaderBar())
+        content_box.append(self.content_header)
         content_box.append(self.content_view)
 
         # Split view
@@ -61,3 +65,4 @@ class KiwiSettingsWindow(Adw.ApplicationWindow):
         if row:
             label = row.get_child().get_last_child().get_label()
             self.content_view.set_visible_child_name(label)
+            self.content_title.set_title(label)
