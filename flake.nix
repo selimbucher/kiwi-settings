@@ -32,9 +32,15 @@
       ];
 
       installPhase = ''
-        mkdir -p $out/bin
-        cp main.py $out/bin/kiwi-settings
-        chmod +x $out/bin/kiwi-settings
+        mkdir -p $out/bin $out/lib/kiwi-settings $out/share/applications
+
+        cp -r src/. $out/lib/kiwi-settings/
+
+        makeWrapper ${pkgs.python3.withPackages (ps: [ ps.pygobject3 ])}/bin/python3 $out/bin/kiwi-settings \
+          --add-flags "$out/lib/kiwi-settings/main.py" \
+          --set PYTHONPATH "$out/lib/kiwi-settings"
+
+        cp data/kiwi-settings.desktop $out/share/applications/kiwi-settings.desktop
       '';
     };
   in {
