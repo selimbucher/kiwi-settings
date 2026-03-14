@@ -5,7 +5,7 @@ from window import KiwiSettingsWindow
 
 class App(Adw.Application):
     def __init__(self):
-        super().__init__(application_id="io.github.selimbucher.kiwi-settings")
+        super().__init__(application_id="com.github.selimbucher.kiwi_settings")
         self.connect("activate", self.on_activate)
 
     def on_activate(self, app):
