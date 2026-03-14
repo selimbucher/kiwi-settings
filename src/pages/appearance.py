@@ -1,39 +1,6 @@
-import os
-import configparser
 from gi.repository import Adw, Gtk, Gdk
 from config import get, set as set_conf, write_conf
 from widgets.hue_strip import HueStrip
-
-GTK_CONFIG_PATHS = [
-    os.path.expanduser("~/.config/gtk-4.0/settings.ini"),
-    os.path.expanduser("~/.config/gtk-3.0/settings.ini"),
-]
-
-
-def _read_dark_mode() -> bool:
-    for path in GTK_CONFIG_PATHS:
-        if not os.path.exists(path):
-            continue
-        cfg = configparser.ConfigParser()
-        cfg.read(path)
-        scheme = cfg.get("Settings", "gtk-color-scheme", fallback=None)
-        if scheme is not None:
-            return scheme == "prefer-dark"
-    return False
-
-
-def _write_dark_mode(dark: bool):
-    scheme = "prefer-dark" if dark else "prefer-light"
-    for path in GTK_CONFIG_PATHS:
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        cfg = configparser.ConfigParser()
-        if os.path.exists(path):
-            cfg.read(path)
-        if not cfg.has_section("Settings"):
-            cfg.add_section("Settings")
-        cfg.set("Settings", "gtk-color-scheme", scheme)
-        with open(path, "w") as f:
-            cfg.write(f)
 
 
 class AppearancePage(Adw.PreferencesPage):
@@ -41,21 +8,16 @@ class AppearancePage(Adw.PreferencesPage):
         super().__init__()
         self.set_icon_name("preferences-desktop-appearance-symbolic")
 
-        theme_group = Adw.PreferencesGroup(title="Theme")
-        self.add(theme_group)
+        kiwi_group = Adw.PreferencesGroup(title="Kiwi Shell")
+        self.add(kiwi_group)
 
-        dark_row = Adw.SwitchRow(title="Dark Mode")
-        dark_row.set_active(_read_dark_mode())
-        dark_row.connect("notify::active", self.on_dark_mode_changed)
-        theme_group.add(dark_row)
-
-        options = Gtk.StringList.new(["Dark", "Glass"])
-        theme_row = Adw.ComboRow(title="Kiwi Theme", model=options)
-        themes = ["dark", "glass"]
-        theme = get("theme", "dark")
-        theme_row.set_selected(themes.index(theme) if theme in themes else 0)
-        theme_row.connect("notify::selected", self.on_theme_changed)
-        theme_group.add(theme_row)
+        kiwi_options = Gtk.StringList.new(["Dark", "Glass"])
+        kiwi_theme_row = Adw.ComboRow(title="Theme", model=kiwi_options)
+        kiwi_themes = ["dark", "glass"]
+        kiwi_theme = get("theme", "dark")
+        kiwi_theme_row.set_selected(kiwi_themes.index(kiwi_theme) if kiwi_theme in kiwi_themes else 0)
+        kiwi_theme_row.connect("notify::selected", self.on_kiwi_theme_changed)
+        kiwi_group.add(kiwi_theme_row)
 
         color_group = Adw.PreferencesGroup(title="Color")
         self.add(color_group)
@@ -113,9 +75,6 @@ class AppearancePage(Adw.PreferencesPage):
         write_conf()
         self._update_color_button()
 
-    def on_dark_mode_changed(self, row, _):
-        _write_dark_mode(row.get_active())
-
-    def on_theme_changed(self, row, _):
+    def on_kiwi_theme_changed(self, row, _):
         set_conf("theme", row.get_selected_item().get_string().lower())
         write_conf()
