@@ -3,7 +3,7 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, Gtk
 from pages.appearance import AppearancePage
 from pages.dock import DockPage
-# from pages.bar import BarPage
+from pages.bar import BarPage
 
 class KiwiSettingsWindow(Adw.ApplicationWindow):
     def __init__(self, **kwargs):
@@ -14,15 +14,15 @@ class KiwiSettingsWindow(Adw.ApplicationWindow):
         # Sidebar list
         sidebar = Gtk.ListBox(css_classes=["navigation-sidebar"])
         sidebar.append(self._nav_row("preferences-desktop-appearance-symbolic", "Appearance"))
-        sidebar.append(self._nav_row("dock-symbolic", "Dock"))
-        sidebar.append(self._nav_row("panel-symbolic", "Bar"))
+        sidebar.append(self._nav_row("xapp-prefs-toolbar-symbolic", "Dock"))
+        sidebar.append(self._nav_row("panel-top-symbolic", "Menu Bar"))
         sidebar.connect("row-selected", self._on_row_selected)
 
         # Pages
         self.pages = {
             "Appearance": AppearancePage(),
             "Dock": DockPage(),
-            # "Bar": BarPage(),
+            "Menu Bar": BarPage(),
         }
 
         self.content_view = Adw.ViewStack()
