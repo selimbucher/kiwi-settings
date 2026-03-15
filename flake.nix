@@ -38,7 +38,8 @@
 
         makeWrapper ${pkgs.python3.withPackages (ps: [ ps.pygobject3 ])}/bin/python3 $out/bin/kiwi-settings \
           --add-flags "$out/lib/kiwi-settings/main.py" \
-          --set PYTHONPATH "$out/lib/kiwi-settings"
+          --set PYTHONPATH "$out/lib/kiwi-settings" \
+          --prefix PATH : ${pkgs.imagemagick}/bin
 
         cp data/kiwi-settings.desktop $out/share/applications/kiwi-settings.desktop
       '';

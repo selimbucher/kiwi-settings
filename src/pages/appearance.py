@@ -2,11 +2,15 @@ from gi.repository import Adw, Gtk, Gdk
 from config import get, set as set_conf, write_conf
 from widgets.hue_strip import HueStrip
 
+from utils.colors import get_color
+from utils.wallpaper import get_wallpaper_path
 
 class AppearancePage(Adw.PreferencesPage):
     def __init__(self):
         super().__init__()
         self.set_icon_name("preferences-desktop-appearance-symbolic")
+
+
 
         kiwi_group = Adw.PreferencesGroup(title="Kiwi Shell")
         self.add(kiwi_group)
@@ -19,10 +23,14 @@ class AppearancePage(Adw.PreferencesPage):
         kiwi_theme_row.connect("notify::selected", self.on_kiwi_theme_changed)
         kiwi_group.add(kiwi_theme_row)
 
+
+
         color_group = Adw.PreferencesGroup(title="Color")
         self.add(color_group)
 
         color_row = Adw.ActionRow(title="Accent Color")
+        color_group.add(color_row)
+
         self._color_button = Gtk.Button()
         self._color_button.set_valign(Gtk.Align.CENTER)
         self._color_button.add_css_class("circular")
@@ -48,7 +56,28 @@ class AppearancePage(Adw.PreferencesPage):
         self._color_button.connect("clicked", lambda _: popover.popup())
         color_row.add_suffix(self._color_button)
         color_row.set_activatable_widget(self._color_button)
-        color_group.add(color_row)
+
+
+        
+        autocolor_row = Adw.SwitchRow(title="Match Wallpaper", subtitle="Automatically adjust colors to match your wallpaper")
+        autocolor_row.set_active(get("auto_color", False))
+        autocolor_row.connect("notify::active", self._on_autocolor_toggled)
+        color_group.add(autocolor_row)
+
+
+
+
+
+    def _on_autocolor_toggled(self, row, _):
+        set_conf("auto_color", row.get_active())
+        write_conf()
+        if row.get_active():
+            wallpaper_path = get_wallpaper_path()
+            if wallpaper_path:
+                color = get_color(wallpaper_path)
+                set_conf("primary_color", color)
+                write_conf()
+                self._update_color_button()
 
     def _update_color_button(self):
         hex_color = get("primary_color", "#ffffff")
