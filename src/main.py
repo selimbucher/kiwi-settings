@@ -30,7 +30,7 @@ class App(Adw.Application):
         self.connect("activate", self.on_activate)
 
     def on_activate(self, app):
-        win = KiwiSettingsWindow(application=app)
+        win = KiwiSettingsWindow(application=app, title="Kiwi Settings")
         win.present()
 
 if __name__ == "__main__":
