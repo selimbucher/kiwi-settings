@@ -41,7 +41,7 @@
           --set PYTHONPATH "$out/lib/kiwi-settings" \
           --prefix PATH : ${pkgs.imagemagick}/bin
 
-        cp data/kiwi-settings.desktop $out/share/applications/kiwi-settings.desktop
+        cp data/com.github.selimbucher.kiwi_settings.desktop $out/share/applications/com.github.selimbucher.kiwi_settings.desktop
       '';
     };
   in {
