@@ -37,7 +37,7 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         print("--- Starting Kiwi Settings ---")
         App().run()
-    elif len(sys.argv) in (2, 3):
+    elif len(sys.argv) >= 2:
         command = sys.argv[1]
         if command == "color":
             if len(sys.argv) != 3:
@@ -54,7 +54,18 @@ if __name__ == "__main__":
                 sys.exit(1)
             _print_color_output(color)
         elif command == "auto-color":
-            image_path = sys.argv[2] if len(sys.argv) == 3 else None
+            args = sys.argv[2:]
+            output_color = False
+
+            if "-o" in args:
+                output_color = True
+                args.remove("-o")
+
+            if len(args) > 1:
+                print("Usage: kiwi-settings auto-color [-o] [image_path]", file=sys.stderr)
+                sys.exit(1)
+
+            image_path = args[0] if args else None
             if not image_path:
                 from utils.wallpaper import get_wallpaper_path
                 image_path = get_wallpaper_path()
@@ -75,9 +86,12 @@ if __name__ == "__main__":
             set_conf("auto_color", True)
             set_conf("primary_color", color)
             write_conf()
+
+            if output_color:
+                _print_color_output(color)
         else:
-            print("Usage: kiwi-settings [color <image_path>] [auto-color [image_path]]", file=sys.stderr)
+            print("Usage: kiwi-settings [color <image_path>] [auto-color [-o] [image_path]]", file=sys.stderr)
             sys.exit(1)
     else:
-        print("Usage: kiwi-settings [color <image_path>] [auto-color [image_path]]", file=sys.stderr)
+        print("Usage: kiwi-settings [color <image_path>] [auto-color [-o] [image_path]]", file=sys.stderr)
         sys.exit(1)
