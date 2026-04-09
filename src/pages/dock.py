@@ -44,7 +44,7 @@ class DockPage(Adw.PreferencesPage):
 
         icon_size_row = Adw.ActionRow(title="Icon Size")
         icon_size_scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 42, 64, 1)
-        icon_size_scale.set_value(get("dock_icon_size", 56))
+        icon_size_scale.set_value(get("dock_icon_size", 52))
         icon_size_scale.set_draw_value(True)
         icon_size_scale.set_hexpand(True)
         icon_size_scale.set_valign(Gtk.Align.CENTER)
