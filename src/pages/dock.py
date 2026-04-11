@@ -42,6 +42,14 @@ class DockPage(Adw.PreferencesPage):
         margin_row.connect("notify::value", self.on_margin_changed)
         appearance_group.add(margin_row)
 
+        arpeggio_row = Adw.SwitchRow(
+            title="Sound Effects",
+            subtitle="Play tunes when hovering overing icons",
+        )
+        arpeggio_row.set_active(get("dock_arpeggio", False))
+        arpeggio_row.connect("notify::active", lambda row, _: [set_conf("dock_arpeggio", row.get_active()), write_conf()])
+        appearance_group.add(arpeggio_row)
+
         self.add(appearance_group)
 
     def on_mode_changed(self, row, _):
