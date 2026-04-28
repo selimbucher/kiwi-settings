@@ -20,6 +20,23 @@ class BarPage(Adw.PreferencesPage):
 
         self.add(appearence_group)
 
+        indicator_group = Adw.PreferencesGroup(title="Volume and Brightness Indicator")
+
+        options = Gtk.StringList.new(["Bottom", "Left"])
+        position_row = Adw.ComboRow(title="Position", model=options)
+        position_values = ["bottom", "left"]
+        curr_position = get("indicator_bar_position", "bottom")
+        selected_index = position_values.index(curr_position) if curr_position in position_values else 0
+        position_row.set_selected(selected_index)
+        position_row.connect("notify::selected", self.on_indicator_position_changed)
+        indicator_group.add(position_row)
+
+        self.add(indicator_group)
+
     def on_margin_changed(self, row, _):
         set_conf("bar_margin", int(row.get_value()))
+        write_conf()
+
+    def on_indicator_position_changed(self, row, _):
+        set_conf("indicator_bar_position", row.get_selected_item().get_string().lower())
         write_conf()
