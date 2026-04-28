@@ -6,7 +6,7 @@ class BarPage(Adw.PreferencesPage):
         super().__init__()
         self.set_icon_name("preferences-desktop-symbolic")
 
-        appearence_group = Adw.PreferencesGroup(title="Menu Bar Appearance")
+        appearence_group = Adw.PreferencesGroup(title="Bar Appearance")
 
         margin_row = Adw.SpinRow(
             title="Margin",

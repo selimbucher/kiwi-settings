@@ -15,14 +15,14 @@ class KiwiSettingsWindow(Adw.ApplicationWindow):
         sidebar = Gtk.ListBox(css_classes=["navigation-sidebar"])
         sidebar.append(self._nav_row("preferences-desktop-appearance-symbolic", "Appearance"))
         sidebar.append(self._nav_row("xapp-prefs-toolbar-symbolic", "Dock"))
-        sidebar.append(self._nav_row("panel-top-symbolic", "Menu Bar"))
+        sidebar.append(self._nav_row("panel-top-symbolic", "Status Bar"))
         sidebar.connect("row-selected", self._on_row_selected)
 
         # Pages
         self.pages = {
             "Appearance": AppearancePage(),
             "Dock": DockPage(),
-            "Menu Bar": BarPage(),
+            "Status Bar": BarPage(),
         }
 
         self.content_view = Adw.ViewStack()
