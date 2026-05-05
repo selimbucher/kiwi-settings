@@ -68,6 +68,84 @@ class AppearancePage(Adw.PreferencesPage):
 
 
 
+        nightshift_group = Adw.PreferencesGroup(title="Night Shift")
+        self.add(nightshift_group)
+
+        auto_nightshift_row = Adw.SwitchRow(
+            title="Schedule Night Shift",
+            subtitle="Automatically enable within a timeframe",
+        )
+        auto_nightshift_row.set_active(get("auto_nightshift", False))
+        auto_nightshift_row.connect("notify::active", self._on_auto_nightshift_toggled)
+        nightshift_group.add(auto_nightshift_row)
+
+        # Track dependent rows so we can grey them out when scheduling is off
+        self._nightshift_dependents = []
+
+        # From
+        from_row = Adw.ActionRow(title="From")
+        self._from_button = Gtk.Button(valign=Gtk.Align.CENTER)
+        self._from_button.add_css_class("flat")
+        self._from_button.set_label(get("nightshift_start", "22:00"))
+        self._from_button.connect(
+            "clicked",
+            lambda btn: self._open_time_popover(btn, "nightshift_start"),
+        )
+        from_row.add_suffix(self._from_button)
+        from_row.set_activatable_widget(self._from_button)
+        nightshift_group.add(from_row)
+        self._nightshift_dependents.append(from_row)
+
+        # To
+        to_row = Adw.ActionRow(title="To")
+        self._to_button = Gtk.Button(valign=Gtk.Align.CENTER)
+        self._to_button.add_css_class("flat")
+        self._to_button.set_label(get("nightshift_end", "06:00"))
+        self._to_button.connect(
+            "clicked",
+            lambda btn: self._open_time_popover(btn, "nightshift_end"),
+        )
+        to_row.add_suffix(self._to_button)
+        to_row.set_activatable_widget(self._to_button)
+        nightshift_group.add(to_row)
+        self._nightshift_dependents.append(to_row)
+
+        # Intensity
+        intensity_row = Adw.ActionRow(title="Intensity")
+
+        intensity_box = Gtk.Box(
+            orientation=Gtk.Orientation.HORIZONTAL,
+            spacing=8,
+            valign=Gtk.Align.CENTER,
+        )
+
+        warm_icon = Gtk.Image.new_from_icon_name("temperature-symbolic")
+        warm_icon.add_css_class("dim-label")
+
+        cold_icon = Gtk.Image.new_from_icon_name("weather-snow-night-symbolic")
+        cold_icon.add_css_class("dim-label")
+
+        intensity_scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 3000, 6000, 100)
+        intensity_scale.set_inverted(True)
+        intensity_scale.set_value(get("nightshift_intensity", 4000))
+        intensity_scale.set_size_request(200, -1)
+        intensity_scale.set_valign(Gtk.Align.CENTER)
+        intensity_scale.set_draw_value(False)
+        intensity_scale.connect("value-changed", self._on_intensity_changed)
+
+        intensity_box.append(cold_icon)
+        intensity_box.append(intensity_scale)
+        intensity_box.append(warm_icon)
+        
+
+        intensity_row.add_suffix(intensity_box)
+        nightshift_group.add(intensity_row)
+
+        # Apply initial sensitivity based on switch state
+        self._update_nightshift_sensitivity(auto_nightshift_row.get_active())
+
+
+
     def _on_autocolor_toggled(self, row, _):
         set_conf("auto_color", row.get_active())
         write_conf()
@@ -107,3 +185,68 @@ class AppearancePage(Adw.PreferencesPage):
     def on_kiwi_theme_changed(self, row, _):
         set_conf("theme", row.get_selected_item().get_string().lower())
         write_conf()
+
+    def _on_auto_nightshift_toggled(self, row, _):
+        active = row.get_active()
+        set_conf("auto_nightshift", active)
+        write_conf()
+        self._update_nightshift_sensitivity(active)
+
+    def _update_nightshift_sensitivity(self, active):
+        for row in self._nightshift_dependents:
+            row.set_sensitive(active)
+
+    def _on_intensity_changed(self, scale):
+        set_conf("nightshift_intensity", int(scale.get_value()))
+        write_conf()
+
+    def _open_time_popover(self, button, config_key):
+        try:
+            h_str, m_str = get(config_key, "00:00").split(":")
+            hour, minute = int(h_str), int(m_str)
+        except (ValueError, AttributeError):
+            hour, minute = 0, 0
+
+        popover = Gtk.Popover()
+        popover.set_parent(button)
+        popover.set_position(Gtk.PositionType.BOTTOM)
+        popover.set_has_arrow(True)
+        popover.connect("closed", lambda p: p.unparent())
+
+        box = Gtk.Box(
+            orientation=Gtk.Orientation.HORIZONTAL,
+            spacing=4,
+            margin_top=8,
+            margin_bottom=8,
+            margin_start=8,
+            margin_end=8,
+        )
+
+        hour_spin = Gtk.SpinButton.new_with_range(0, 23, 1)
+        hour_spin.set_value(hour)
+        hour_spin.set_wrap(True)
+        hour_spin.set_orientation(Gtk.Orientation.VERTICAL)
+
+        colon = Gtk.Label(label=":")
+        colon.set_valign(Gtk.Align.CENTER)
+
+        minute_spin = Gtk.SpinButton.new_with_range(0, 59, 1)
+        minute_spin.set_value(minute)
+        minute_spin.set_wrap(True)
+        minute_spin.set_orientation(Gtk.Orientation.VERTICAL)
+
+        def on_change(_=None):
+            time_str = f"{int(hour_spin.get_value()):02d}:{int(minute_spin.get_value()):02d}"
+            button.set_label(time_str)
+            set_conf(config_key, time_str)
+            write_conf()
+
+        hour_spin.connect("value-changed", on_change)
+        minute_spin.connect("value-changed", on_change)
+
+        box.append(hour_spin)
+        box.append(colon)
+        box.append(minute_spin)
+
+        popover.set_child(box)
+        popover.popup()
