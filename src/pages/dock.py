@@ -32,6 +32,14 @@ class DockPage(Adw.PreferencesPage):
         mode_row.connect("notify::selected", self.on_mode_changed)
         appearance_group.add(mode_row)
 
+        full_width_row = Adw.SwitchRow(
+            title="Full Width",
+            subtitle="Stretch the dock across the whole screen like a taskbar",
+        )
+        full_width_row.set_active(get("dock_full_width", False))
+        full_width_row.connect("notify::active", lambda row, _: [set_conf("dock_full_width", row.get_active()), write_conf()])
+        appearance_group.add(full_width_row)
+
         margin_row = Adw.SpinRow(
             title="Margin",
             subtitle="Distance from tiled windows in pixels",
@@ -50,7 +58,7 @@ class DockPage(Adw.PreferencesPage):
         arpeggio_row.connect("notify::active", lambda row, _: [set_conf("dock_arpeggio", row.get_active()), write_conf()])
         appearance_group.add(arpeggio_row)
         icon_size_row = Adw.ActionRow(title="Icon Size")
-        icon_size_scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 42, 64, 1)
+        icon_size_scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 24, 64, 1)
         icon_size_scale.set_value(get("dock_icon_size", 52))
         icon_size_scale.set_draw_value(True)
         icon_size_scale.set_hexpand(True)
