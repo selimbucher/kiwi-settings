@@ -17,6 +17,14 @@ class DesktopPage(Adw.PreferencesPage):
         icons_row.connect("notify::active", lambda row, _: [set_conf("desktop_icons", row.get_active()), write_conf()])
         group.add(icons_row)
 
+        placement_row = Adw.SwitchRow(
+            title="Free Placement",
+            subtitle="Icons stay on the grid spot you drag them to instead of auto-arranging",
+        )
+        placement_row.set_active(get("desktop_free_placement", True))
+        placement_row.connect("notify::active", lambda row, _: [set_conf("desktop_free_placement", row.get_active()), write_conf()])
+        group.add(placement_row)
+
         self.add(group)
 
         monitor_group = Adw.PreferencesGroup(title="Multi-Monitor")
