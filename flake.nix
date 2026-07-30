@@ -11,7 +11,7 @@
 
     kiwi-settings = pkgs.python3Packages.buildPythonApplication {
       pname = "kiwi-settings";
-      version = "0.1.0";
+      version = "0.2.0";
       src = ./.;
 
       format = "other";
