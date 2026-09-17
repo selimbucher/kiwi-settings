@@ -1,71 +1,88 @@
-import gi
-gi.require_version("Adw", "1")
 from gi.repository import Adw, Gtk
+
 from pages.appearance import AppearancePage
+from pages.bar import BarPage
 from pages.desktop import DesktopPage
 from pages.dock import DockPage
-from pages.bar import BarPage
+from pages.keyboard import KeyboardPage
+from pages.night_shift import NightShiftPage
+
+# (id for `kiwi-settings <id>`, title, icon, page)
+PAGES = [
+    ("appearance", "Appearance", "preferences-desktop-appearance-symbolic", AppearancePage),
+    ("desktop", "Desktop", "user-desktop-symbolic", DesktopPage),
+    ("dock", "Dock", "xapp-prefs-toolbar-symbolic", DockPage),
+    ("bar", "Status Bar", "panel-top-symbolic", BarPage),
+    ("night-shift", "Night Shift", "night-light-symbolic", NightShiftPage),
+    ("keyboard", "Keyboard", "input-keyboard-symbolic", KeyboardPage),
+]
+PAGE_IDS = [page_id for page_id, *_ in PAGES]
+
 
 class KiwiSettingsWindow(Adw.ApplicationWindow):
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.set_default_size(900, 650)
-        self.set_title("Kiwi Settings")
+        super().__init__(title="Kiwi Settings", default_width=900, default_height=650, **kwargs)
 
-        # Sidebar list
-        sidebar = Gtk.ListBox(css_classes=["navigation-sidebar"])
-        sidebar.append(self._nav_row("preferences-desktop-appearance-symbolic", "Appearance"))
-        sidebar.append(self._nav_row("user-desktop-symbolic", "Desktop"))
-        sidebar.append(self._nav_row("xapp-prefs-toolbar-symbolic", "Dock"))
-        sidebar.append(self._nav_row("panel-top-symbolic", "Status Bar"))
-        sidebar.connect("row-selected", self._on_row_selected)
+        self._stack = Adw.ViewStack()
+        self._titles = {}
+        self._rows = {}
+        self._sidebar = Gtk.ListBox(css_classes=["navigation-sidebar"])
+        for page_id, title, icon, page_class in PAGES:
+            page = page_class()
+            self._stack.add_named(page, page_id)
+            self._titles[page_id] = title
+            if page_id == "appearance":
+                self._appearance = page
+            if page_id == "keyboard":
+                self._keyboard = page
 
-        # Pages
-        self.pages = {
-            "Appearance": AppearancePage(),
-            "Desktop": DesktopPage(),
-            "Dock": DockPage(),
-            "Status Bar": BarPage(),
-        }
+            row_box = Gtk.Box(spacing=12, margin_top=6, margin_bottom=6, margin_start=6)
+            row_box.append(Gtk.Image(icon_name=icon))
+            row_box.append(Gtk.Label(label=title))
+            row = Gtk.ListBoxRow(child=row_box, name=page_id)
+            self._rows[page_id] = row
+            self._sidebar.append(row)
+        self._sidebar.connect("row-activated", lambda _, row: self.show_page(row.get_name()))
 
-        self.content_view = Adw.ViewStack()
-        for name, page in self.pages.items():
-            self.content_view.add_named(page, name)
+        sidebar_view = Adw.ToolbarView(
+            content=Gtk.ScrolledWindow(hscrollbar_policy=Gtk.PolicyType.NEVER, child=self._sidebar)
+        )
+        sidebar_view.add_top_bar(Adw.HeaderBar())
 
-        # Sidebar header + scroll
-        sidebar_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        sidebar_box.append(Adw.HeaderBar())
-        scroll = Gtk.ScrolledWindow(hscrollbar_policy=Gtk.PolicyType.NEVER, vexpand=True)
-        scroll.set_child(sidebar)
-        sidebar_box.append(scroll)
+        self._content_title = Adw.WindowTitle()
+        content_header = Adw.HeaderBar(title_widget=self._content_title)
+        content_view = Adw.ToolbarView(content=self._stack)
+        content_view.add_top_bar(content_header)
 
-        # Content header
-        self.content_header = Adw.HeaderBar(css_classes=["flat"])
-        self.content_title = Adw.WindowTitle(title="Appearance")
-        self.content_header.set_title_widget(self.content_title)
+        self._content_page = Adw.NavigationPage(child=content_view, title="Kiwi Settings")
+        self._split = Adw.NavigationSplitView(
+            sidebar=Adw.NavigationPage(child=sidebar_view, title="Settings"),
+            content=self._content_page,
+        )
+        self.set_content(self._split)
 
-        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        content_box.append(self.content_header)
-        content_box.append(self.content_view)
+        narrow = Adw.Breakpoint.new(Adw.BreakpointCondition.parse("max-width: 560sp"))
+        narrow.add_setter(self._split, "collapsed", True)
+        self.add_breakpoint(narrow)
 
-        # Split view
-        split = Adw.NavigationSplitView()
-        split.set_sidebar(Adw.NavigationPage.new(sidebar_box, "Settings"))
-        split.set_content(Adw.NavigationPage.new(content_box, "Settings"))
+        self.connect("notify::is-active", self._on_active_changed)
 
-        self.set_content(split)
+        self.show_page("appearance")
 
-        # Select first row
-        sidebar.select_row(sidebar.get_row_at_index(0))
+    def _on_active_changed(self, window, _):
+        # kiwi-shell or a terminal may have changed things meanwhile
+        if window.is_active():
+            self._appearance.refresh()
+            self._keyboard.refresh()
 
-    def _nav_row(self, icon, label):
-        box = Gtk.Box(spacing=12, margin_top=6, margin_bottom=6, margin_start=6)
-        box.append(Gtk.Image(icon_name=icon))
-        box.append(Gtk.Label(label=label))
-        return Gtk.ListBoxRow(child=box)
-
-    def _on_row_selected(self, listbox, row):
-        if row:
-            label = row.get_child().get_last_child().get_label()
-            self.content_view.set_visible_child_name(label)
-            self.content_title.set_title(label)
+    def show_page(self, page_id):
+        if page_id not in self._rows:
+            return False
+        self._sidebar.select_row(self._rows[page_id])
+        self._stack.set_visible_child_name(page_id)
+        self._content_title.set_title(self._titles[page_id])
+        self._content_page.set_title(self._titles[page_id])
+        self._split.set_show_content(True)
+        # otherwise the first entry on the page takes focus and shows selected
+        self._rows[page_id].grab_focus()
+        return True

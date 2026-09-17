@@ -1,42 +1,21 @@
-from gi.repository import Adw, Gtk
-from config import get, set as set_conf, write_conf
+from gi.repository import Adw
+
+from widgets.rows import combo_row, spin_row
+
 
 class BarPage(Adw.PreferencesPage):
     def __init__(self):
         super().__init__()
-        self.set_icon_name("preferences-desktop-symbolic")
 
-        appearence_group = Adw.PreferencesGroup(title="Bar Appearance")
+        bar_group = Adw.PreferencesGroup(title="Status Bar")
+        bar_group.add(spin_row("bar_margin", "Margin", 0, 12, "Gap to tiled windows, in pixels"))
+        self.add(bar_group)
 
-        margin_row = Adw.SpinRow(
-            title="Margin",
-            subtitle="Distance to tiled windows in pixels",
+        indicator_group = Adw.PreferencesGroup(
+            title="Volume and Brightness",
+            description="The indicator shown while changing either",
         )
-        margin_row.set_range(0, 12)
-        margin_row.get_adjustment().set_step_increment(1)
-        margin_row.set_value(get("bar_margin", 2))
-        margin_row.connect("notify::value", self.on_margin_changed)
-        appearence_group.add(margin_row)
-
-        self.add(appearence_group)
-
-        indicator_group = Adw.PreferencesGroup(title="Volume and Brightness Indicator")
-
-        options = Gtk.StringList.new(["Bottom", "Left"])
-        position_row = Adw.ComboRow(title="Position", model=options)
-        position_values = ["bottom", "left"]
-        curr_position = get("indicator_bar_position", "bottom")
-        selected_index = position_values.index(curr_position) if curr_position in position_values else 0
-        position_row.set_selected(selected_index)
-        position_row.connect("notify::selected", self.on_indicator_position_changed)
-        indicator_group.add(position_row)
-
+        indicator_group.add(
+            combo_row("indicator_bar_position", "Position", [("bottom", "Bottom"), ("left", "Left")])
+        )
         self.add(indicator_group)
-
-    def on_margin_changed(self, row, _):
-        set_conf("bar_margin", int(row.get_value()))
-        write_conf()
-
-    def on_indicator_position_changed(self, row, _):
-        set_conf("indicator_bar_position", row.get_selected_item().get_string().lower())
-        write_conf()

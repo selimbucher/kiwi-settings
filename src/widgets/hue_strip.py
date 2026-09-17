@@ -5,6 +5,8 @@ from config import get
 
 
 class HueStrip(Gtk.Widget):
+    """Hue left to right, lightness top to bottom; reports picks as #rrggbb."""
+
     S = 0.85
     L_MIN = 0.6
     L_MAX = 0.85
@@ -12,11 +14,6 @@ class HueStrip(Gtk.Widget):
     def __init__(self, on_color_changed=None):
         super().__init__()
         self.on_color_changed = on_color_changed
-        
-        color = get("primary_color", "rgb(190,157,241)")
-        h, l = self._css_to_hl(color)
-        self.hue = h
-        self.lightness = max(self.L_MIN, min(self.L_MAX, l))
 
         self.set_hexpand(True)
         self.set_size_request(-1, 80)
@@ -28,6 +25,7 @@ class HueStrip(Gtk.Widget):
         self._cache: cairo.ImageSurface | None = None
         self._cache_size = (0, 0)
         self._canvas.set_parent(self)
+        self.set_color(get("primary_color"))
 
         drag = Gtk.GestureDrag()
         drag.connect("drag-begin", self._on_drag_begin)
@@ -37,6 +35,12 @@ class HueStrip(Gtk.Widget):
         click = Gtk.GestureClick()
         click.connect("pressed", self._on_click)
         self.add_controller(click)
+
+    def set_color(self, color_str: str):
+        h, l = self._css_to_hl(color_str)
+        self.hue = h
+        self.lightness = max(self.L_MIN, min(self.L_MAX, l))
+        self._canvas.queue_draw()
 
     def _css_to_hl(self, color_str: str):
         """Parse any valid CSS color string and return (hue, lightness) in [0,1]."""
@@ -119,7 +123,8 @@ class HueStrip(Gtk.Widget):
             self.L_MAX - (y / height) * (self.L_MAX - self.L_MIN)))
         self._canvas.queue_draw()
         if self.on_color_changed:
-            self.on_color_changed(self.hue, self.lightness)
+            r, g, b = self._hsl_to_rgb(self.hue, self.S, self.lightness)
+            self.on_color_changed("#{:02x}{:02x}{:02x}".format(round(r * 255), round(g * 255), round(b * 255)))
 
     def _on_drag_begin(self, gesture, x, y):
         self._set_from_xy(x, y)
@@ -133,7 +138,8 @@ class HueStrip(Gtk.Widget):
     def _on_click(self, gesture, n, x, y):
         self._set_from_xy(x, y)
 
-    def _hsl_to_rgb(self, h, s, l):
+    @staticmethod
+    def _hsl_to_rgb(h, s, l):
         if s == 0:
             return l, l, l
         def hue2rgb(p, q, t):

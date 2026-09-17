@@ -1,0 +1,135 @@
+/* Style: Light and Dark tiles */
+.style-switcher {
+  margin-top: 6px;
+}
+
+button.flat.style-tile,
+button.flat.style-tile:hover,
+button.flat.style-tile:active,
+button.flat.style-tile:checked {
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  color: inherit;
+}
+
+.style-preview {
+  border-radius: 12px;
+  padding: 3px;
+}
+
+.style-tile:hover .style-preview {
+  box-shadow: inset 0 0 0 3px alpha(currentColor, 0.15);
+}
+
+.style-tile:checked .style-preview {
+  box-shadow: inset 0 0 0 3px var(--accent-bg-color);
+}
+
+.style-tile:checked label {
+  font-weight: bold;
+}
+
+.style-wallpaper {
+  border-radius: 9px;
+  background-color: alpha(currentColor, 0.1);
+}
+
+/* the two windows drawn on each tile, in the desktop's own colors */
+.style-window {
+  min-width: 92px;
+  min-height: 56px;
+  border-radius: 6px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
+}
+
+.style-window.back {
+  margin: 16px 0 0 20px;
+}
+
+.style-window.front {
+  margin: 0 20px 14px 0;
+}
+
+.style-window.light {
+  background-color: #ffffff;
+}
+
+.style-window.light .style-titlebar {
+  background-color: #f6f6f6;
+}
+
+.style-window.dark {
+  background-color: #1e1e1e;
+}
+
+.style-window.dark .style-titlebar {
+  background-color: #2e2e32;
+}
+
+.style-titlebar {
+  min-height: 12px;
+  padding: 0 6px;
+  border-radius: 6px 6px 0 0;
+}
+
+.style-dot {
+  min-width: 5px;
+  min-height: 5px;
+  border-radius: 99px;
+}
+
+.style-dot.close {
+  background-color: #fe6254;
+}
+
+.style-dot.minimize {
+  background-color: #fdc92d;
+}
+
+.style-dot.maximize {
+  background-color: #28d33f;
+}
+
+/* Wallpaper grid */
+.wallpaper-grid {
+  margin-top: 6px;
+}
+
+.wallpaper-grid flowboxchild {
+  padding: 0;
+}
+
+button.flat.wallpaper-tile {
+  padding: 3px;
+  border-radius: 12px;
+  background: none;
+}
+
+button.flat.wallpaper-tile:hover {
+  box-shadow: inset 0 0 0 3px alpha(currentColor, 0.15);
+}
+
+button.flat.wallpaper-tile.current {
+  box-shadow: inset 0 0 0 3px var(--accent-bg-color);
+}
+
+.wallpaper-image {
+  border-radius: 9px;
+  background-color: alpha(currentColor, 0.1);
+}
+
+/* Accent color */
+button.accent-dot {
+  min-width: 24px;
+  min-height: 24px;
+  padding: 0;
+  border-radius: 99px;
+  box-shadow: inset 0 0 0 1px alpha(black, 0.1);
+}
+
+/* Keyboard */
+.shortcut-capture {
+  font-size: 1.3em;
+  margin: 6px 0;
+}
