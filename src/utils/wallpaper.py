@@ -2,11 +2,14 @@ import os
 import re
 import subprocess
 import sys
+from functools import cache
 
 IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp", ".bmp", ".gif", ".tif", ".tiff")
+INCLUDED_DIR = os.path.join("kiwi-shell", "assets", "wallpapers")
 
 
-def get_wallpaper_path() -> str | None:
+def query_wallpaper() -> str | None:
+    """The picture awww is showing, under the path awww reports for it."""
     try:
         result = subprocess.run(["awww", "query"], capture_output=True, text=True)
     except OSError as e:
@@ -21,10 +24,14 @@ def get_wallpaper_path() -> str | None:
     # DP-1: 2560x1440, scale: 1, currently displaying: image: /path/to/wallpaper.jpg
     for line in result.stdout.splitlines():
         if "image: " in line:
-            return same_included(line.split("image: ", 1)[1].strip())
+            return line.split("image: ", 1)[1].strip()
 
     print("ERROR: awww is not showing an image", file=sys.stderr)
     return None
+
+
+def get_wallpaper_path() -> str | None:
+    return same_included(query_wallpaper())
 
 
 def set_wallpaper(path: str):
@@ -35,15 +42,21 @@ def set_wallpaper(path: str):
     )
 
 
+# kept for the session: the current wallpaper points at the folder only while it is
+# an included one, and the grid shouldn't lose them the moment you pick your own
+@cache
 def included_folder() -> str | None:
-    """The wallpapers kiwi-shell ships, found through the XDG data dirs."""
+    """The wallpapers kiwi-shell ships, found through the XDG data dirs or the current one."""
     data_dirs = [os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share")]
     data_dirs += (os.environ.get("XDG_DATA_DIRS") or "/usr/local/share:/usr/share").split(":")
     for data_dir in data_dirs:
-        folder = os.path.join(data_dir, "kiwi-shell", "assets", "wallpapers")
+        folder = os.path.join(data_dir, INCLUDED_DIR)
         if os.path.isdir(folder):
             return os.path.realpath(folder)
-    return None
+    # installed through home-manager the shell is in no data dir at all, and the
+    # only trace of where it keeps them is the wallpaper it set from there
+    folder = os.path.dirname(query_wallpaper() or "")
+    return folder if folder.endswith(INCLUDED_DIR) else None
 
 
 def same_included(path: str | None) -> str | None:
@@ -65,18 +78,29 @@ def pictures_folder() -> str:
     return GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_PICTURES) or os.path.expanduser("~/Pictures")
 
 
-def list_wallpapers(current: str | None = None) -> list[str]:
-    """The included wallpapers, and the current one first when it's your own."""
-    folder = included_folder()
+def library_folder() -> str | None:
+    """Your own wallpapers, ~/Pictures/Wallpapers when you keep one."""
+    folder = os.path.join(pictures_folder(), "Wallpapers")
+    # awww reports resolved paths, so compare resolved paths
+    return os.path.realpath(folder) if os.path.isdir(folder) else None
+
+
+def _images_in(folder: str | None) -> list[str]:
     try:
         names = sorted(os.listdir(folder), key=str.lower) if folder else []
     except OSError:
         names = []
-    paths = [
+    return [
         os.path.join(folder, name)
         for name in names
         if name.lower().endswith(IMAGE_EXTENSIONS) and os.path.isfile(os.path.join(folder, name))
     ]
+
+
+def list_wallpapers(current: str | None = None) -> list[str]:
+    """The included wallpapers and your own, the current one first when it's neither."""
+    paths = _images_in(included_folder())
+    paths += [path for path in _images_in(library_folder()) if same_included(path) not in paths]
     if current and current not in paths:
         paths.insert(0, current)
     return paths
