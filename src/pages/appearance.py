@@ -7,8 +7,9 @@ from gi.repository import Adw, Gdk, Gio, GLib, Gtk
 from config import get, reload as reload_config, save
 from utils.colors import get_color
 from utils.wallpaper import get_wallpaper_path, pictures_folder, same_included, set_wallpaper
+from widgets.glass_slider import GlassSlider
 from widgets.hue_strip import HueStrip
-from widgets.rows import combo_row
+from widgets.segmented import Segmented
 from widgets.style_switcher import StyleSwitcher, interface_settings
 from widgets.wallpaper_grid import WallpaperGrid
 
@@ -26,6 +27,29 @@ class AppearancePage(Adw.PreferencesPage):
             style_group = Adw.PreferencesGroup(title="Style")
             style_group.add(self._style)
             self.add(style_group)
+
+        shell_group = Adw.PreferencesGroup(
+            title="Shell",
+            description="Background of the bar, dock and menus",
+        )
+        self._panel_style = GlassSlider(self._on_panel_style)
+        # a plain widget added to the group lands under the rows; in a row of
+        # its own it keeps its place and the group's padding
+        style_row = Adw.PreferencesRow(activatable=False, focusable=False)
+        style_row.set_child(self._panel_style)
+        shell_group.add(style_row)
+        self._panel_appearance = Segmented(
+            [
+                ("light", "Light", "weather-clear-symbolic"),
+                ("dark", "Dark", "weather-clear-night-symbolic"),
+                ("system", "System", "emblem-system-symbolic"),
+            ],
+            self._on_panel_appearance,
+        )
+        self._appearance_row = Adw.ActionRow(title="Appearance")
+        self._appearance_row.add_suffix(self._panel_appearance)
+        shell_group.add(self._appearance_row)
+        self.add(shell_group)
 
         wallpaper_group = Adw.PreferencesGroup(title="Wallpaper")
         choose_button = Gtk.Button(label="Choose Picture…", valign=Gtk.Align.CENTER, css_classes=["flat"])
@@ -64,23 +88,6 @@ class AppearancePage(Adw.PreferencesPage):
         match_row.connect("notify::active", self._on_match_toggled)
         color_group.add(match_row)
 
-        shell_group = Adw.PreferencesGroup(title="Shell")
-        self._panel_style = combo_row(
-            "theme",
-            "Panel Style",
-            [("granite", "Granite"), ("acrylic", "Acrylic"), ("tinted", "Tinted Glass"), ("clear", "Clear Glass")],
-            subtitle="Background of the bar, dock and menus",
-        )
-        self._panel_style.connect("notify::selected", lambda *_: self._update_panel_appearance())
-        shell_group.add(self._panel_style)
-        self._panel_appearance = combo_row(
-            "appearance",
-            "Appearance",
-            [("light", "Light"), ("dark", "Dark"), ("system", "Follow System")],
-        )
-        shell_group.add(self._panel_appearance)
-        self.add(shell_group)
-
         self._update_accent()
         self.refresh()
 
@@ -103,6 +110,7 @@ class AppearancePage(Adw.PreferencesPage):
         self._wallpaper = path
         if self._style:
             self._style.set_wallpaper(path)
+        self._panel_style.set_wallpaper(path)
         self._grid.update(path)
 
     def _apply_wallpaper(self, path):
@@ -153,10 +161,21 @@ class AppearancePage(Adw.PreferencesPage):
         self._hue_strip.set_color(color)
 
     def _update_panel_appearance(self):
+        style = get("theme")
+        self._panel_style.set_value(style)
+        self._panel_appearance.set_value(get("appearance"))
         # Clear Glass is the same in light and dark
-        clear = get("theme") == "clear"
-        self._panel_appearance.set_sensitive(not clear)
-        self._panel_appearance.set_subtitle("Clear Glass looks the same in both" if clear else "")
+        clear = style == "clear"
+        self._appearance_row.set_sensitive(not clear)
+        self._appearance_row.set_subtitle(
+            "Clear Glass looks the same in both" if clear else "")
+
+    def _on_panel_style(self, style):
+        save("theme", style)
+        self._update_panel_appearance()
+
+    def _on_panel_appearance(self, appearance):
+        save("appearance", appearance)
 
     def _on_color_picked(self, hex_color):
         save("primary_color", hex_color)
