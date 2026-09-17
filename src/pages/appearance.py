@@ -1,11 +1,12 @@
 import os
 import threading
+import time
 
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk
 
 from config import get, reload as reload_config, save
 from utils.colors import get_color
-from utils.wallpaper import get_wallpaper_path, set_wallpaper, wallpaper_folder
+from utils.wallpaper import get_wallpaper_path, pictures_folder, same_included, set_wallpaper
 from widgets.hue_strip import HueStrip
 from widgets.rows import combo_row
 from widgets.style_switcher import StyleSwitcher, interface_settings
@@ -16,6 +17,8 @@ class AppearancePage(Adw.PreferencesPage):
     def __init__(self):
         super().__init__()
         self._wallpaper = None
+        # (path, when) of a wallpaper awww may not be showing yet
+        self._applying = None
 
         settings = interface_settings()
         self._style = StyleSwitcher(settings) if settings else None
@@ -78,7 +81,15 @@ class AppearancePage(Adw.PreferencesPage):
     def refresh(self):
         """Re-read what kiwi-shell or a terminal may have changed meanwhile."""
         reload_config()
-        self._show_wallpaper(get_wallpaper_path())
+        current = get_wallpaper_path()
+        if self._applying:
+            path, since = self._applying
+            # closing the file dialog refreshes before awww has switched
+            if current != path and time.monotonic() - since < 10:
+                current = path
+            else:
+                self._applying = None
+        self._show_wallpaper(current)
         self._update_accent()
 
     def _show_wallpaper(self, path):
@@ -88,7 +99,8 @@ class AppearancePage(Adw.PreferencesPage):
         self._grid.update(path)
 
     def _apply_wallpaper(self, path):
-        path = os.path.realpath(path)
+        path = same_included(os.path.realpath(path))
+        self._applying = (path, time.monotonic())
         set_wallpaper(path)
         self._show_wallpaper(path)
         if get("auto_color"):
@@ -103,7 +115,7 @@ class AppearancePage(Adw.PreferencesPage):
             title="Choose a Wallpaper",
             filters=filters,
             default_filter=images,
-            initial_folder=Gio.File.new_for_path(wallpaper_folder(self._wallpaper)),
+            initial_folder=Gio.File.new_for_path(pictures_folder()),
         )
         dialog.open(button.get_root(), None, self._on_chosen)
 

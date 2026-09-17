@@ -21,7 +21,7 @@ def get_wallpaper_path() -> str | None:
     # DP-1: 2560x1440, scale: 1, currently displaying: image: /path/to/wallpaper.jpg
     for line in result.stdout.splitlines():
         if "image: " in line:
-            return line.split("image: ", 1)[1].strip()
+            return same_included(line.split("image: ", 1)[1].strip())
 
     print("ERROR: awww is not showing an image", file=sys.stderr)
     return None
@@ -35,27 +35,41 @@ def set_wallpaper(path: str):
     )
 
 
+def included_folder() -> str | None:
+    """The wallpapers kiwi-shell ships, found through the XDG data dirs."""
+    data_dirs = [os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share")]
+    data_dirs += (os.environ.get("XDG_DATA_DIRS") or "/usr/local/share:/usr/share").split(":")
+    for data_dir in data_dirs:
+        folder = os.path.join(data_dir, "kiwi-shell", "assets", "wallpapers")
+        if os.path.isdir(folder):
+            return os.path.realpath(folder)
+    return None
+
+
+def same_included(path: str | None) -> str | None:
+    """A picture with an included wallpaper's file name is that wallpaper.
+
+    The names carry the Unsplash photo id: a copy in ~/Pictures, or the
+    included one from before an update. Listing it once, as the included one.
+    """
+    folder = included_folder()
+    if not path or not folder:
+        return path
+    included = os.path.join(folder, os.path.basename(path))
+    return included if os.path.exists(included) else path
+
+
 def pictures_folder() -> str:
     from gi.repository import GLib
 
     return GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_PICTURES) or os.path.expanduser("~/Pictures")
 
 
-def wallpaper_folder(current: str | None = None) -> str:
-    """~/Pictures/Wallpapers when it exists, else the folder of the current one"""
-    library = os.path.join(pictures_folder(), "Wallpapers")
-    if os.path.isdir(library):
-        return library
-    if current:
-        return os.path.dirname(current)
-    return pictures_folder()
-
-
 def list_wallpapers(current: str | None = None) -> list[str]:
-    # awww reports resolved paths, so compare resolved paths
-    folder = os.path.realpath(wallpaper_folder(current))
+    """The included wallpapers, and the current one first when it's your own."""
+    folder = included_folder()
     try:
-        names = sorted(os.listdir(folder), key=str.lower)
+        names = sorted(os.listdir(folder), key=str.lower) if folder else []
     except OSError:
         names = []
     paths = [
