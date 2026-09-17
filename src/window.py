@@ -4,7 +4,7 @@ from pages.appearance import AppearancePage
 from pages.bar import BarPage
 from pages.desktop import DesktopPage
 from pages.dock import DockPage
-from pages.keyboard import KeyboardPage
+from pages.keybinds import KeybindsPage
 from pages.night_shift import NightShiftPage
 
 # (id for `kiwi-settings <id>`, title, icon, page)
@@ -12,9 +12,9 @@ PAGES = [
     ("appearance", "Appearance", "preferences-desktop-appearance-symbolic", AppearancePage),
     ("desktop", "Desktop", "user-desktop-symbolic", DesktopPage),
     ("dock", "Dock", "xapp-prefs-toolbar-symbolic", DockPage),
-    ("bar", "Status Bar", "panel-top-symbolic", BarPage),
+    ("bar", "Status Bar", "kiwi-status-bar-symbolic", BarPage),
     ("night-shift", "Night Shift", "night-light-symbolic", NightShiftPage),
-    ("keyboard", "Keyboard", "input-keyboard-symbolic", KeyboardPage),
+    ("keybinds", "Keybinds", "preferences-desktop-keyboard-shortcuts-symbolic", KeybindsPage),
 ]
 PAGE_IDS = [page_id for page_id, *_ in PAGES]
 
@@ -33,8 +33,8 @@ class KiwiSettingsWindow(Adw.ApplicationWindow):
             self._titles[page_id] = title
             if page_id == "appearance":
                 self._appearance = page
-            if page_id == "keyboard":
-                self._keyboard = page
+            if page_id == "keybinds":
+                self._keybinds = page
 
             row_box = Gtk.Box(spacing=12, margin_top=6, margin_bottom=6, margin_start=6)
             row_box.append(Gtk.Image(icon_name=icon))
@@ -73,7 +73,7 @@ class KiwiSettingsWindow(Adw.ApplicationWindow):
         # kiwi-shell or a terminal may have changed things meanwhile
         if window.is_active():
             self._appearance.refresh()
-            self._keyboard.refresh()
+            self._keybinds.refresh()
 
     def show_page(self, page_id):
         if page_id not in self._rows:

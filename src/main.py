@@ -98,8 +98,11 @@ class App(Adw.Application):
 
     def do_startup(self):
         Adw.Application.do_startup(self)
+        here = os.path.dirname(os.path.abspath(__file__))
+        # icons no theme has, like the status bar's
+        Gtk.IconTheme.get_for_display(Gdk.Display.get_default()).add_search_path(os.path.join(here, "icons"))
         css = Gtk.CssProvider()
-        css.load_from_path(os.path.join(os.path.dirname(os.path.abspath(__file__)), "style.css"))
+        css.load_from_path(os.path.join(here, "style.css"))
         # above USER: the theme usually comes in through ~/.config/gtk-4.0/gtk.css,
         # and these classes exist only here
         Gtk.StyleContext.add_provider_for_display(

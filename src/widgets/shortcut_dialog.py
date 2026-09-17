@@ -4,12 +4,12 @@ from utils import shortcuts
 
 
 class ShortcutDialog(Adw.AlertDialog):
-    """Captures a new shortcut for one of kiwi-shell's shortcuts."""
+    """Captures a new keybind for one of kiwi-shell's shortcuts."""
 
     def __init__(self, name, current, others, foreign_binds, on_chosen):
         super().__init__(
             heading=shortcuts.TITLES[name],
-            body="Press the new shortcut, or tap a modifier on its own.",
+            body="Press the new keybind, or tap a modifier on its own.",
         )
         self._name = name
         self._others = others

@@ -17,7 +17,7 @@ ACTIVE_DESCRIPTIONS = {
 MEDIA_KEYS = ["kiwi: volume-up", "kiwi: volume-down", "kiwi: volume-mute"]
 
 
-class KeyboardPage(Adw.PreferencesPage):
+class KeybindsPage(Adw.PreferencesPage):
     def __init__(self):
         super().__init__()
         self._group = None
@@ -37,8 +37,8 @@ class KeyboardPage(Adw.PreferencesPage):
         current = self._current()
 
         self._group = Adw.PreferencesGroup(
-            title="Shortcuts",
-            description="Kiwi Shell's own shortcuts. Select one to change it.",
+            title="Kiwi Shell",
+            description="Select a keybind to change it.",
         )
         for name, note in ROWS:
             self._group.add(self._row(name, note, current, binds if check else None))
