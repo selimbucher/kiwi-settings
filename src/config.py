@@ -13,7 +13,8 @@ DEFAULTS = {
     "primary_color": "rgb(190,157,241)",
     "bar_margin": 4,
     "dock_margin": 4,
-    "theme": "dark",
+    "theme": "granite",
+    "appearance": "system",
     "dock": "default",
     "dock_home": True,
     "dock_trash": True,
@@ -39,10 +40,27 @@ DEFAULTS = {
 os.makedirs(CONFIG_FOLDER, exist_ok=True)
 
 
+THEME_STYLES = ("granite", "acrylic", "tinted", "clear")
+
+
+def _migrate(config):
+    """The shell's panel styles used to be "dark" and "glass" (see kiwi-shell's
+    widgets/config.tsx): glass became Clear Glass, dark became Granite, kept
+    dark where no appearance was chosen."""
+    if not config or config.get("theme") in THEME_STYLES:
+        return config
+    if config.get("theme") == "glass":
+        config["theme"] = "clear"
+    else:
+        config["theme"] = "granite"
+        config.setdefault("appearance", "dark")
+    return config
+
+
 def _read():
     try:
         with open(CONFIG_FILE) as f:
-            return json.load(f)
+            return _migrate(json.load(f))
     except (OSError, ValueError):
         return {}
 

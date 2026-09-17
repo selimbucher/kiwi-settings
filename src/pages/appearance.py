@@ -65,14 +65,20 @@ class AppearancePage(Adw.PreferencesPage):
         color_group.add(match_row)
 
         shell_group = Adw.PreferencesGroup(title="Shell")
-        shell_group.add(
-            combo_row(
-                "theme",
-                "Panel Style",
-                [("dark", "Dark"), ("glass", "Glass")],
-                subtitle="Background of the bar, dock and menus",
-            )
+        self._panel_style = combo_row(
+            "theme",
+            "Panel Style",
+            [("granite", "Granite"), ("acrylic", "Acrylic"), ("tinted", "Tinted Glass"), ("clear", "Clear Glass")],
+            subtitle="Background of the bar, dock and menus",
         )
+        self._panel_style.connect("notify::selected", lambda *_: self._update_panel_appearance())
+        shell_group.add(self._panel_style)
+        self._panel_appearance = combo_row(
+            "appearance",
+            "Appearance",
+            [("light", "Light"), ("dark", "Dark"), ("system", "Follow System")],
+        )
+        shell_group.add(self._panel_appearance)
         self.add(shell_group)
 
         self._update_accent()
@@ -91,6 +97,7 @@ class AppearancePage(Adw.PreferencesPage):
                 self._applying = None
         self._show_wallpaper(current)
         self._update_accent()
+        self._update_panel_appearance()
 
     def _show_wallpaper(self, path):
         self._wallpaper = path
@@ -144,6 +151,12 @@ class AppearancePage(Adw.PreferencesPage):
         color = get("primary_color")
         self._accent_css.load_from_string(f".accent-dot {{ background-color: {color}; }}")
         self._hue_strip.set_color(color)
+
+    def _update_panel_appearance(self):
+        # Clear Glass is the same in light and dark
+        clear = get("theme") == "clear"
+        self._panel_appearance.set_sensitive(not clear)
+        self._panel_appearance.set_subtitle("Clear Glass looks the same in both" if clear else "")
 
     def _on_color_picked(self, hex_color):
         save("primary_color", hex_color)
