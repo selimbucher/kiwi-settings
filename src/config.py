@@ -14,7 +14,6 @@ DEFAULTS = {
     "bar_margin": 4,
     "dock_margin": 4,
     "theme": "acrylic",
-    "appearance": "dark",
     "dock": "default",
     "dock_home": True,
     "dock_trash": True,
@@ -45,15 +44,14 @@ THEME_STYLES = ("granite", "acrylic", "tinted", "clear")
 
 def _migrate(config):
     """The shell's panel styles used to be "dark" and "glass" (see kiwi-shell's
-    widgets/config.tsx): glass became Clear Glass, dark became Granite, kept
-    dark where no appearance was chosen."""
-    if not config or config.get("theme") in THEME_STYLES:
+    widgets/config.tsx): glass became Clear Glass, dark became Granite. The
+    panels also had a light appearance once; they are dark only now."""
+    if not config:
         return config
-    if config.get("theme") == "glass":
-        config["theme"] = "clear"
-    else:
-        config["theme"] = "granite"
-        config.setdefault("appearance", "dark")
+    config.pop("appearance", None)
+    if config.get("theme") in THEME_STYLES:
+        return config
+    config["theme"] = "clear" if config.get("theme") == "glass" else "granite"
     return config
 
 

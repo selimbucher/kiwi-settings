@@ -9,7 +9,6 @@ from utils.colors import get_color
 from utils.wallpaper import get_wallpaper_path, pictures_folder, same_included, set_wallpaper
 from widgets.glass_slider import GlassSlider
 from widgets.hue_strip import HueStrip
-from widgets.segmented import Segmented
 from widgets.style_switcher import StyleSwitcher, interface_settings
 from widgets.wallpaper_grid import WallpaperGrid
 
@@ -38,17 +37,6 @@ class AppearancePage(Adw.PreferencesPage):
         style_row = Adw.PreferencesRow(activatable=False, focusable=False)
         style_row.set_child(self._panel_style)
         shell_group.add(style_row)
-        self._panel_appearance = Segmented(
-            [
-                ("light", "Light", "weather-clear-symbolic"),
-                ("dark", "Dark", "weather-clear-night-symbolic"),
-                ("system", "System", "emblem-system-symbolic"),
-            ],
-            self._on_panel_appearance,
-        )
-        self._appearance_row = Adw.ActionRow(title="Appearance")
-        self._appearance_row.add_suffix(self._panel_appearance)
-        shell_group.add(self._appearance_row)
         self.add(shell_group)
 
         wallpaper_group = Adw.PreferencesGroup(title="Wallpaper")
@@ -104,7 +92,7 @@ class AppearancePage(Adw.PreferencesPage):
                 self._applying = None
         self._show_wallpaper(current)
         self._update_accent()
-        self._update_panel_appearance()
+        self._panel_style.set_value(get("theme"))
 
     def _show_wallpaper(self, path):
         self._wallpaper = path
@@ -160,22 +148,9 @@ class AppearancePage(Adw.PreferencesPage):
         self._accent_css.load_from_string(f".accent-dot {{ background-color: {color}; }}")
         self._hue_strip.set_color(color)
 
-    def _update_panel_appearance(self):
-        style = get("theme")
-        self._panel_style.set_value(style)
-        self._panel_appearance.set_value(get("appearance"))
-        # Clear Glass is the same in light and dark
-        clear = style == "clear"
-        self._appearance_row.set_sensitive(not clear)
-        self._appearance_row.set_subtitle(
-            "Clear Glass looks the same in both" if clear else "")
-
     def _on_panel_style(self, style):
         save("theme", style)
-        self._update_panel_appearance()
-
-    def _on_panel_appearance(self, appearance):
-        save("appearance", appearance)
+        self._panel_style.set_value(style)
 
     def _on_color_picked(self, hex_color):
         save("primary_color", hex_color)

@@ -99,55 +99,6 @@ button.flat.style-tile:checked {
 .glass-title {
   margin-bottom: 10px;
 }
-
-/* Appearance: linked toggles, the way the shell's own theme tab offers it */
-.segmented {
-  padding: 2px;
-  border-radius: 11px;
-  background-color: alpha(currentColor, 0.08);
-}
-
-.segmented button,
-.segmented button:hover,
-.segmented button:active,
-.segmented button:checked {
-  min-height: 26px;
-  padding: 3px 12px;
-  border: none;
-  border-radius: 9px;
-  background: none;
-  box-shadow: none;
-  text-shadow: none;
-  font-size: 0.95em;
-  font-weight: normal;
-}
-
-.segmented button:hover {
-  background-color: alpha(currentColor, 0.1);
-}
-
-.segmented button:checked {
-  background-color: var(--accent-bg-color);
-  color: var(--accent-fg-color);
-  font-weight: bold;
-}
-
-/* the row goes insensitive for Clear Glass, where the washed-out accent fill
-   leaves its white label unreadable. GTK dims the label from its own node, so
-   the plain foreground has to be named there as well */
-.segmented button:checked:disabled {
-  background-color: alpha(var(--window-fg-color), 0.16);
-}
-
-.segmented button:checked:disabled,
-.segmented button:checked:disabled label {
-  color: var(--window-fg-color);
-}
-
-.segmented button image {
-  -gtk-icon-size: 15px;
-}
-
 /* Wallpaper grid */
 .wallpaper-grid {
   margin-top: 6px;
