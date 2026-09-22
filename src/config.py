@@ -24,6 +24,7 @@ DEFAULTS = {
     "desktop_icons": True,
     "desktop_free_placement": True,
     "popup_monitor": "active",
+    "search_engine": "duckduckgo",
     "dock_arpeggio": False,
     "indicator_bar_position": "bottom",
     "auto_nightshift": False,

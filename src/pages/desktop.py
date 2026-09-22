@@ -2,6 +2,17 @@ from gi.repository import Adw
 
 from widgets.rows import combo_row, switch_row
 
+# kiwi-shell's SEARCH_ENGINES (widgets/Launcher/providers.ts)
+SEARCH_ENGINES = [
+    ("duckduckgo", "DuckDuckGo"),
+    ("google", "Google"),
+    ("bing", "Bing"),
+    ("brave", "Brave Search"),
+    ("ecosia", "Ecosia"),
+    ("startpage", "Startpage"),
+    ("kagi", "Kagi"),
+]
+
 
 class DesktopPage(Adw.PreferencesPage):
     def __init__(self):
@@ -30,3 +41,14 @@ class DesktopPage(Adw.PreferencesPage):
             )
         )
         self.add(monitor_group)
+
+        spotlight_group = Adw.PreferencesGroup(title="Spotlight")
+        spotlight_group.add(
+            combo_row(
+                "search_engine",
+                "Web Search",
+                SEARCH_ENGINES,
+                subtitle="Where Spotlight's last row sends your search",
+            )
+        )
+        self.add(spotlight_group)
