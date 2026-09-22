@@ -9,6 +9,7 @@ from utils.colors import get_color
 from utils.wallpaper import get_wallpaper_path, pictures_folder, same_included, set_wallpaper
 from widgets.glass_slider import GlassSlider
 from widgets.hue_strip import HueStrip
+from widgets.rows import switch_row
 from widgets.style_switcher import StyleSwitcher, interface_settings
 from widgets.wallpaper_grid import WallpaperGrid
 
@@ -34,9 +35,12 @@ class AppearancePage(Adw.PreferencesPage):
         self._panel_style = GlassSlider(self._on_panel_style)
         # a plain widget added to the group lands under the rows; in a row of
         # its own it keeps its place and the group's padding
-        style_row = Adw.PreferencesRow(activatable=False, focusable=False)
+        style_row = Adw.PreferencesRow(activatable=False, focusable=False, css_classes=["glass-row"])
         style_row.set_child(self._panel_style)
         shell_group.add(style_row)
+        shell_group.add(
+            switch_row("kiwi_blur", "Blur", "Turn off on slower graphics; the panels turn more solid instead")
+        )
         self.add(shell_group)
 
         wallpaper_group = Adw.PreferencesGroup(title="Wallpaper")

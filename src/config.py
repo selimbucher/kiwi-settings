@@ -14,6 +14,7 @@ DEFAULTS = {
     "bar_margin": 4,
     "dock_margin": 4,
     "theme": "acrylic",
+    "kiwi_blur": True,
     "dock": "auto-hide",
     "dock_home": True,
     "dock_trash": True,

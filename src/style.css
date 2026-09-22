@@ -92,6 +92,13 @@ button.flat.style-tile:checked {
 }
 
 /* Panel style: the four styles read as one axis, solid to barely there */
+/* the row only holds the track, which is the control: the row itself doesn't
+   light up under the pointer or while the knob is held */
+row.glass-row:hover,
+row.glass-row:active {
+  background-color: transparent;
+}
+
 .glass-slider {
   margin: 14px 14px 15px;
 }
