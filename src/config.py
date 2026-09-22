@@ -17,7 +17,7 @@ DEFAULTS = {
     "dock": "auto-hide",
     "dock_home": True,
     "dock_trash": True,
-    "auto_color": False,
+    "auto_color": True,
     "dock_icon_size": 46,
     "dock_full_width": False,
     "desktop_icons": True,
