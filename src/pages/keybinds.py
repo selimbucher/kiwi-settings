@@ -9,10 +9,12 @@ ROWS = [
     ("app_switcher", "Keep holding the modifier to go through your apps"),
     ("workspace_switcher", "Add Shift to go backwards"),
 ]
+# a kiwi-shell from before its binds sent global shortcuts described the
+# launcher's as "kiwi: launcher toggle"
 ACTIVE_DESCRIPTIONS = {
-    "launcher": "kiwi: launcher toggle",
-    "app_switcher": "kiwi: apps open",
-    "workspace_switcher": "kiwi: workspaces next",
+    "launcher": ("kiwi: launcher", "kiwi: launcher toggle"),
+    "app_switcher": ("kiwi: apps open",),
+    "workspace_switcher": ("kiwi: workspaces next",),
 }
 MEDIA_KEYS = ["kiwi: volume-up", "kiwi: volume-down", "kiwi: volume-mute"]
 
@@ -68,7 +70,7 @@ class KeybindsPage(Adw.PreferencesPage):
     def _registered(binds, name, shortcut):
         mask, key = shortcut.combos(name)[0]
         return any(
-            b.get("description") == ACTIVE_DESCRIPTIONS[name]
+            b.get("description") in ACTIVE_DESCRIPTIONS[name]
             and b.get("modmask") == mask
             and str(b.get("key", "")).upper() == key
             for b in binds
