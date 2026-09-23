@@ -1,5 +1,6 @@
 from gi.repository import Adw
 
+from widgets.plugin_row import PluginRow
 from widgets.rows import combo_row, switch_row
 
 # kiwi-shell's SEARCH_ENGINES (widgets/Launcher/providers.ts)
@@ -41,6 +42,13 @@ class DesktopPage(Adw.PreferencesPage):
             )
         )
         self.add(monitor_group)
+
+        compositor_group = Adw.PreferencesGroup(
+            title="Compositor",
+            description="What Hyprland does for the shell",
+        )
+        compositor_group.add(PluginRow())
+        self.add(compositor_group)
 
         spotlight_group = Adw.PreferencesGroup(title="Spotlight")
         spotlight_group.add(
