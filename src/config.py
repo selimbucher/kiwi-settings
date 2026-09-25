@@ -35,6 +35,7 @@ DEFAULTS = {
         "launcher": "Super",
         "app_switcher": "Alt+Tab",
         "workspace_switcher": "Super+Tab",
+        "notification_center": "",
     },
 }
 

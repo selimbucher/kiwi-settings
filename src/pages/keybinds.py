@@ -8,6 +8,7 @@ ROWS = [
     ("launcher", None),
     ("app_switcher", "Keep holding the modifier to go through your apps"),
     ("workspace_switcher", "Add Shift to go backwards"),
+    ("notification_center", None),
 ]
 # a kiwi-shell from before its binds sent global shortcuts described the
 # launcher's as "kiwi: launcher toggle"
@@ -15,6 +16,7 @@ ACTIVE_DESCRIPTIONS = {
     "launcher": ("kiwi: launcher", "kiwi: launcher toggle"),
     "app_switcher": ("kiwi: apps open",),
     "workspace_switcher": ("kiwi: workspaces next",),
+    "notification_center": ("kiwi: notification center",),
 }
 MEDIA_KEYS = ["kiwi: volume-up", "kiwi: volume-down", "kiwi: volume-mute"]
 
@@ -55,13 +57,16 @@ class KeybindsPage(Adw.PreferencesPage):
 
     def _row(self, name, note, current, binds):
         shortcut = current[name]
-        subtitle = "Tap" if shortcut.tap else note
+        subtitle = "Tap" if shortcut and shortcut.tap else note
         row = Adw.ActionRow(title=shortcuts.TITLES[name], subtitle=subtitle or "", activatable=True)
 
-        if binds is not None and not self._registered(binds, name, shortcut):
+        if shortcut and binds is not None and not self._registered(binds, name, shortcut):
             row.set_subtitle("Not active: Kiwi Shell isn't running, or your Hyprland config already uses these keys")
 
-        row.add_suffix(Gtk.ShortcutLabel(accelerator=shortcut.accelerator(), valign=Gtk.Align.CENTER))
+        if shortcut:
+            row.add_suffix(Gtk.ShortcutLabel(accelerator=shortcut.accelerator(), valign=Gtk.Align.CENTER))
+        else:
+            row.add_suffix(Gtk.Label(label="Not set", valign=Gtk.Align.CENTER, css_classes=["dim-label"]))
         row.add_suffix(Gtk.Image(icon_name="go-next-symbolic", css_classes=["dim-label"]))
         row.connect("activated", lambda _: self._edit(name, current))
         return row
@@ -92,7 +97,7 @@ class KeybindsPage(Adw.PreferencesPage):
     def _set(self, name, shortcut):
         value = dict(shortcuts.DEFAULT_SHORTCUTS)
         value.update(get("shortcuts") or {})
-        value[name] = str(shortcut)
+        value[name] = str(shortcut) if shortcut else ""
         save("shortcuts", value)
         self.refresh(check=False)
         # kiwi-shell re-registers within a moment; show the result

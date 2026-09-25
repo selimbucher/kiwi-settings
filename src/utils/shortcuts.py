@@ -14,6 +14,7 @@ DEFAULT_SHORTCUTS = {
     "launcher": "Super",
     "app_switcher": "Alt+Tab",
     "workspace_switcher": "Super+Tab",
+    "notification_center": "",
 }
 
 # name, GTK mask, Hyprland modmask bit, Hyprland name, the modifier's own keys
@@ -102,6 +103,7 @@ def tap_for(keyval):
 
 
 def configured(config_value, name):
+    """The shortcut in use for `name`; None for an optional one that isn't set."""
     shortcut = Shortcut.parse((config_value or {}).get(name))
     if shortcut is None or problem(name, shortcut, {}) is not None:
         return Shortcut.parse(DEFAULT_SHORTCUTS[name])
@@ -114,16 +116,18 @@ def problem(name, shortcut, others, foreign_binds=()):
     others: the other shortcuts, {name: Shortcut}; foreign_binds: root binds
     from the Hyprland config, as reported by `hyprctl binds`.
     """
-    if name != "launcher":
+    if name in ("app_switcher", "workspace_switcher"):
         if shortcut.tap or len(shortcut.mods) != 1:
             return "Hold exactly one modifier while pressing a key, like Alt+Tab"
         if shortcut.mods == ["Shift"]:
             return "Shift is taken: it switches backwards"
+    elif shortcut.tap and name != "launcher":
+        return "Hold a modifier while pressing a key"
     elif not shortcut.tap and not shortcut.mods and not shortcut.key.startswith(("F", "XF86")):
-        return "Add a modifier, or tap one on its own"
+        return "Add a modifier, or tap one on its own" if name == "launcher" else "Add a modifier"
 
     for other_name, other in others.items():
-        if other_name == name:
+        if other_name == name or other is None:
             continue
         # a tap may share its modifier with a switcher; anything else can't overlap
         if shortcut.tap or other.tap:
@@ -144,6 +148,7 @@ TITLES = {
     "launcher": "Open Launcher",
     "app_switcher": "Switch Apps",
     "workspace_switcher": "Switch Workspaces",
+    "notification_center": "Show Notifications",
 }
 
 

@@ -9,7 +9,7 @@ class ShortcutDialog(Adw.AlertDialog):
     def __init__(self, name, current, others, foreign_binds, on_chosen):
         super().__init__(
             heading=shortcuts.TITLES[name],
-            body="Press the new keybind, or tap a modifier on its own.",
+            body="Press the new keybind, or tap a modifier on its own." if name == "launcher" else "Press the new keybind.",
         )
         self._name = name
         self._others = others
@@ -19,7 +19,7 @@ class ShortcutDialog(Adw.AlertDialog):
         self._tap = None
         self._toplevel = None
 
-        self._label = Gtk.ShortcutLabel(accelerator=current.accelerator(), halign=Gtk.Align.CENTER)
+        self._label = Gtk.ShortcutLabel(accelerator=current.accelerator() if current else "", halign=Gtk.Align.CENTER)
         self._label.add_css_class("shortcut-capture")
         self._hint = Gtk.Label(wrap=True, justify=Gtk.Justification.CENTER, css_classes=["dim-label"])
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
@@ -30,7 +30,8 @@ class ShortcutDialog(Adw.AlertDialog):
         self.add_response("cancel", "Cancel")
         default = shortcuts.Shortcut.parse(shortcuts.DEFAULT_SHORTCUTS[name])
         if current != default:
-            self.add_response("reset", "Reset to Default")
+            # an optional shortcut's default is none at all
+            self.add_response("reset", "Reset to Default" if default else "Remove")
         self.add_response("set", "Set")
         self.set_response_appearance("set", Adw.ResponseAppearance.SUGGESTED)
         self.set_response_enabled("set", False)
