@@ -13,7 +13,10 @@ from gi.repository import Gdk, Gtk
 DEFAULT_SHORTCUTS = {
     "launcher": "Super",
     "app_switcher": "Alt+Tab",
-    "workspace_switcher": "Super+Tab",
+    # Mission Control, under the name it had as a workspace switcher
+    "workspace_switcher": "Ctrl+Super+Up",
+    "desktop_left": "Ctrl+Super+Left",
+    "desktop_right": "Ctrl+Super+Right",
     "notification_center": "",
 }
 
@@ -72,11 +75,7 @@ class Shortcut:
         mask = self.modmask()
         if self.tap:
             return [(mask, _BY_NAME[self.mods[0].lower()][4][0].upper())]
-        key = self.key.upper()
-        combos = [(mask, key)]
-        if role == "workspace_switcher":
-            combos.append((mask | 1, key))
-        return combos
+        return [(mask, self.key.upper())]
 
 
 def _ordered(mods):
@@ -116,7 +115,7 @@ def problem(name, shortcut, others, foreign_binds=()):
     others: the other shortcuts, {name: Shortcut}; foreign_binds: root binds
     from the Hyprland config, as reported by `hyprctl binds`.
     """
-    if name in ("app_switcher", "workspace_switcher"):
+    if name == "app_switcher":
         if shortcut.tap or len(shortcut.mods) != 1:
             return "Hold exactly one modifier while pressing a key, like Alt+Tab"
         if shortcut.mods == ["Shift"]:
@@ -147,7 +146,9 @@ def problem(name, shortcut, others, foreign_binds=()):
 TITLES = {
     "launcher": "Open Launcher",
     "app_switcher": "Switch Apps",
-    "workspace_switcher": "Switch Workspaces",
+    "workspace_switcher": "Mission Control",
+    "desktop_left": "Desktop on the Left",
+    "desktop_right": "Desktop on the Right",
     "notification_center": "Show Notifications",
 }
 

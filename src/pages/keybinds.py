@@ -7,7 +7,9 @@ from widgets.shortcut_dialog import ShortcutDialog
 ROWS = [
     ("launcher", None),
     ("app_switcher", "Keep holding the modifier to go through your apps"),
-    ("workspace_switcher", "Add Shift to go backwards"),
+    ("workspace_switcher", "All your windows, and your desktops"),
+    ("desktop_left", None),
+    ("desktop_right", None),
     ("notification_center", None),
 ]
 # a kiwi-shell from before its binds sent global shortcuts described the
@@ -15,7 +17,9 @@ ROWS = [
 ACTIVE_DESCRIPTIONS = {
     "launcher": ("kiwi: launcher", "kiwi: launcher toggle"),
     "app_switcher": ("kiwi: apps open",),
-    "workspace_switcher": ("kiwi: workspaces next",),
+    "workspace_switcher": ("kiwi: mission control",),
+    "desktop_left": ("kiwi: desktop left",),
+    "desktop_right": ("kiwi: desktop right",),
     "notification_center": ("kiwi: notification center",),
 }
 MEDIA_KEYS = ["kiwi: volume-up", "kiwi: volume-down", "kiwi: volume-mute"]
