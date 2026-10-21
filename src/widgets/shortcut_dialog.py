@@ -93,7 +93,7 @@ class ShortcutDialog(Adw.AlertDialog):
         if shortcut is None:
             return
         self._label.set_accelerator(shortcut.accelerator())
-        problem = shortcuts.problem(self._name, shortcut, self._others, self._foreign)
+        problem = shortcuts.problem(self._name, shortcut, self._others)
         if problem:
             self._captured = None
             self._hint.set_label(problem)
@@ -101,7 +101,10 @@ class ShortcutDialog(Adw.AlertDialog):
             self._hint.remove_css_class("dim-label")
         else:
             self._captured = shortcut
-            self._hint.set_label("Tap" if shortcut.tap else "")
+            if shortcuts.taken_from_config(self._name, shortcut, self._foreign):
+                self._hint.set_label("Your Hyprland config binds these keys too. Kiwi Shell turns that bind off while it runs.")
+            else:
+                self._hint.set_label("Tap" if shortcut.tap else "")
             self._hint.remove_css_class("error")
             self._hint.add_css_class("dim-label")
         self.set_response_enabled("set", self._captured is not None)

@@ -7,9 +7,10 @@ from widgets.shortcut_dialog import ShortcutDialog
 ROWS = [
     ("launcher", None),
     ("app_switcher", "Keep holding the modifier to go through your apps"),
-    ("workspace_switcher", "All your windows, and your desktops"),
+    ("mission_control", "All your windows, and your desktops"),
     ("desktop_left", None),
     ("desktop_right", None),
+    ("workspace_switcher", "Keep holding the modifier to go through your desktops"),
     ("notification_center", None),
 ]
 # a kiwi-shell from before its binds sent global shortcuts described the
@@ -17,9 +18,10 @@ ROWS = [
 ACTIVE_DESCRIPTIONS = {
     "launcher": ("kiwi: launcher", "kiwi: launcher toggle"),
     "app_switcher": ("kiwi: apps open",),
-    "workspace_switcher": ("kiwi: mission control",),
+    "mission_control": ("kiwi: mission control",),
     "desktop_left": ("kiwi: desktop left",),
     "desktop_right": ("kiwi: desktop right",),
+    "workspace_switcher": ("kiwi: workspaces next",),
     "notification_center": ("kiwi: notification center",),
 }
 MEDIA_KEYS = ["kiwi: volume-up", "kiwi: volume-down", "kiwi: volume-mute"]
@@ -65,7 +67,7 @@ class KeybindsPage(Adw.PreferencesPage):
         row = Adw.ActionRow(title=shortcuts.TITLES[name], subtitle=subtitle or "", activatable=True)
 
         if shortcut and binds is not None and not self._registered(binds, name, shortcut):
-            row.set_subtitle("Not active: Kiwi Shell isn't running, or your Hyprland config already uses these keys")
+            row.set_subtitle("Not active: Kiwi Shell isn't running")
 
         if shortcut:
             row.add_suffix(Gtk.ShortcutLabel(accelerator=shortcut.accelerator(), valign=Gtk.Align.CENTER))

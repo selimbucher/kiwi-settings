@@ -13,12 +13,16 @@ from gi.repository import Gdk, Gtk
 DEFAULT_SHORTCUTS = {
     "launcher": "Super",
     "app_switcher": "Alt+Tab",
-    # Mission Control, under the name it had as a workspace switcher
-    "workspace_switcher": "Ctrl+Super+Up",
+    "mission_control": "Ctrl+Super+Up",
     "desktop_left": "Ctrl+Super+Left",
     "desktop_right": "Ctrl+Super+Right",
+    # the classic workspace switcher, held like the app switcher; none by default
+    "workspace_switcher": "",
     "notification_center": "",
 }
+
+# held: one modifier whose release confirms, Shift for going backwards
+HELD = ("app_switcher", "workspace_switcher")
 
 # name, GTK mask, Hyprland modmask bit, Hyprland name, the modifier's own keys
 MODIFIERS = [
@@ -75,7 +79,10 @@ class Shortcut:
         mask = self.modmask()
         if self.tap:
             return [(mask, _BY_NAME[self.mods[0].lower()][4][0].upper())]
-        return [(mask, self.key.upper())]
+        combos = [(mask, self.key.upper())]
+        if role == "workspace_switcher":
+            combos.append((mask | 1, self.key.upper()))
+        return combos
 
 
 def _ordered(mods):
@@ -109,13 +116,12 @@ def configured(config_value, name):
     return shortcut
 
 
-def problem(name, shortcut, others, foreign_binds=()):
+def problem(name, shortcut, others):
     """Why `shortcut` can't be used for `name`, or None.
 
-    others: the other shortcuts, {name: Shortcut}; foreign_binds: root binds
-    from the Hyprland config, as reported by `hyprctl binds`.
+    others: the other shortcuts, {name: Shortcut}.
     """
-    if name == "app_switcher":
+    if name in HELD:
         if shortcut.tap or len(shortcut.mods) != 1:
             return "Hold exactly one modifier while pressing a key, like Alt+Tab"
         if shortcut.mods == ["Shift"]:
@@ -135,20 +141,27 @@ def problem(name, shortcut, others, foreign_binds=()):
             continue
         if set(shortcut.combos(name)) & set(other.combos(other_name)):
             return f"Already used by {TITLES[other_name]}"
-
-    wanted = set(shortcut.combos(name))
-    for bind in foreign_binds:
-        if (bind.get("modmask"), str(bind.get("key", "")).upper()) in wanted:
-            return "Already bound in your Hyprland config"
     return None
+
+
+def taken_from_config(name, shortcut, foreign_binds):
+    """Whether the Hyprland config binds keys of `shortcut` too.
+
+    kiwi-shell's shortcuts take their keys: while it runs, such a bind of the
+    config is off. foreign_binds: root binds from the Hyprland config, as
+    reported by `hyprctl binds`.
+    """
+    wanted = set(shortcut.combos(name))
+    return any((bind.get("modmask"), str(bind.get("key", "")).upper()) in wanted for bind in foreign_binds)
 
 
 TITLES = {
     "launcher": "Open Launcher",
     "app_switcher": "Switch Apps",
-    "workspace_switcher": "Mission Control",
+    "mission_control": "Mission Control",
     "desktop_left": "Desktop on the Left",
     "desktop_right": "Desktop on the Right",
+    "workspace_switcher": "Switch Desktops",
     "notification_center": "Show Notifications",
 }
 

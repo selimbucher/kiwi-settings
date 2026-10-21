@@ -34,9 +34,10 @@ DEFAULTS = {
     "shortcuts": {
         "launcher": "Super",
         "app_switcher": "Alt+Tab",
-        "workspace_switcher": "Ctrl+Super+Up",
+        "mission_control": "Ctrl+Super+Up",
         "desktop_left": "Ctrl+Super+Left",
         "desktop_right": "Ctrl+Super+Right",
+        "workspace_switcher": "",
         "notification_center": "",
     },
 }
