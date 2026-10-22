@@ -23,6 +23,10 @@ class ShortcutDialog(Adw.AlertDialog):
         self._label.add_css_class("shortcut-capture")
         self._hint = Gtk.Label(wrap=True, justify=Gtk.Justification.CENTER, css_classes=["dim-label"])
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        # Wide enough for three buttons in a row: right at the edge of
+        # fitting, AlertDialog flips them between a row and a stack on every
+        # layout, without end.
+        box.set_size_request(320, -1)
         box.append(self._label)
         box.append(self._hint)
         self.set_extra_child(box)
