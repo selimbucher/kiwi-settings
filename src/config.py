@@ -31,6 +31,16 @@ DEFAULTS = {
     "nightshift_start": "20:30",
     "nightshift_end": "06:00",
     "nightshift_intensity": 4000,
+    "island": {
+        "center": "desktops",
+        "weather_city": "",
+        "weather_units": "celsius",
+        "now_playing": True,
+        "performance": True,
+        "devices": True,
+        "charging": True,
+        "focus": True,
+    },
     "shortcuts": {
         "launcher": "Super",
         "app_switcher": "Alt+Tab",
