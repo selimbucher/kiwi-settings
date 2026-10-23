@@ -96,7 +96,7 @@ class IslandEventsDialog(Adw.PreferencesDialog):
             description="Shown for as long as they go on. The microphone, camera and screen dots always show.",
         )
         activities.add(island_switch("now_playing", "Now Playing", "Music and videos playing"))
-        activities.add(island_switch("performance", "Performance", "Memory running out, the CPU hot or busy for minutes"))
+        activities.add(island_switch("performance", "Performance", "Memory running out, the CPU hot or full, an app using significant energy"))
         page.add(activities)
 
         alerts = Adw.PreferencesGroup(title="Alerts", description="Shown for a few seconds")
