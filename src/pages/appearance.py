@@ -9,6 +9,7 @@ from utils.colors import get_color
 from utils.wallpaper import get_wallpaper_path, pictures_folder, same_included, set_wallpaper
 from widgets.glass_slider import GlassSlider
 from widgets.hue_strip import HueStrip
+from widgets.font_row import FontRow
 from widgets.rows import switch_row
 from widgets.style_switcher import StyleSwitcher, interface_settings
 from widgets.wallpaper_grid import WallpaperGrid
@@ -41,6 +42,7 @@ class AppearancePage(Adw.PreferencesPage):
         shell_group.add(
             switch_row("kiwi_blur", "Blur", "Turn off on slower graphics; the panels turn more solid instead")
         )
+        shell_group.add(FontRow())
         self.add(shell_group)
 
         wallpaper_group = Adw.PreferencesGroup(title="Wallpaper")

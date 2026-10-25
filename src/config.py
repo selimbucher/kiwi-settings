@@ -5,6 +5,9 @@ import re
 HOME = os.path.expanduser("~")
 CONFIG_FOLDER = os.path.join(HOME, ".config", "kiwi-shell")
 CONFIG_FILE = os.path.join(CONFIG_FOLDER, "config.json")
+# what Home Manager sets (services.kiwi-shell.settings): kiwi-shell lays it
+# over config.json, so those settings are Home Manager's to change
+NIX_FILE = os.path.join(CONFIG_FOLDER, "nix-config.json")
 HYPR_FILE = os.path.join(CONFIG_FOLDER, "hypr.conf")
 BORDER_OPACITY = 0.7
 
@@ -14,6 +17,7 @@ DEFAULTS = {
     "bar_margin": 4,
     "dock_margin": 4,
     "theme": "acrylic",
+    "font": "Quicksand",
     "kiwi_blur": True,
     "dock": "auto-hide",
     "dock_home": True,
@@ -79,8 +83,25 @@ def _read():
         return {}
 
 
+def _read_nix():
+    try:
+        with open(NIX_FILE) as f:
+            nix = json.load(f)
+        return nix if isinstance(nix, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
 _config = _read()
+_nix = _read_nix()
 _pending = {}
+
+
+def managed(key, sub=None):
+    """Whether Home Manager sets this setting (or this one of a group's)."""
+    if key not in _nix:
+        return False
+    return sub is None or not isinstance(_nix[key], dict) or sub in _nix[key]
 
 
 def reload():
@@ -89,10 +110,19 @@ def reload():
     config.update(_pending)
     _config.clear()
     _config.update(config)
+    _nix.clear()
+    _nix.update(_read_nix())
 
 
 def get(key):
-    return _config.get(key, DEFAULTS.get(key))
+    """The setting as kiwi-shell has it: Home Manager's over the user's."""
+    value = _config.get(key, DEFAULTS.get(key))
+    if key in _nix:
+        nix = _nix[key]
+        if isinstance(nix, dict) and isinstance(value, dict):
+            return {**value, **nix}
+        return nix
+    return value
 
 
 def set(key, value):
