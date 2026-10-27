@@ -148,3 +148,10 @@ button.accent-dot {
   font-size: 1.3em;
   margin: 6px 0;
 }
+
+/* One of an action's several keybinds: its keys as the single one's are
+   drawn, not in the button's bold */
+button.keybind {
+  font-weight: normal;
+  padding: 4px 6px;
+}

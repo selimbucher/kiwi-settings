@@ -4,15 +4,24 @@ from utils import shortcuts
 
 
 class ShortcutDialog(Adw.AlertDialog):
-    """Captures a new keybind for one of kiwi-shell's shortcuts."""
+    """Captures a keybind for one of kiwi-shell's shortcuts.
 
-    def __init__(self, name, current, others, foreign_binds, on_chosen):
-        super().__init__(
-            heading=shortcuts.TITLES[name],
-            body="Press the new keybind, or tap a modifier on its own." if name == "launcher" else "Press the new keybind.",
-        )
+    current: the keybind to change, or None to add one beside the action's
+    others (siblings). on_chosen(response, shortcut): "set" with the keybind
+    pressed, "remove" when current is to go, "reset" for the action's default.
+    """
+
+    def __init__(self, name, current, others, foreign_binds, on_chosen, siblings=()):
+        if current is None and siblings:
+            body = "Press another keybind for it."
+        elif name == "launcher":
+            body = "Press the new keybind, or tap a modifier on its own."
+        else:
+            body = "Press the new keybind."
+        super().__init__(heading=shortcuts.TITLES[name], body=body)
         self._name = name
         self._others = others
+        self._siblings = list(siblings)
         self._foreign = foreign_binds
         self._on_chosen = on_chosen
         self._captured = None
@@ -33,10 +42,13 @@ class ShortcutDialog(Adw.AlertDialog):
 
         self.add_response("cancel", "Cancel")
         default = shortcuts.Shortcut.parse(shortcuts.DEFAULT_SHORTCUTS[name])
-        if current != default:
+        if current is not None and self._siblings:
+            # one of several: the others stay
+            self.add_response("remove", "Remove")
+        elif current is not None and current != default:
             # an optional shortcut's default is none at all
             self.add_response("reset", "Reset to Default" if default else "Remove")
-        self.add_response("set", "Set")
+        self.add_response("set", "Add" if current is None and self._siblings else "Set")
         self.set_response_appearance("set", Adw.ResponseAppearance.SUGGESTED)
         self.set_response_enabled("set", False)
         self.set_default_response("cancel")
@@ -97,7 +109,7 @@ class ShortcutDialog(Adw.AlertDialog):
         if shortcut is None:
             return
         self._label.set_accelerator(shortcut.accelerator())
-        problem = shortcuts.problem(self._name, shortcut, self._others)
+        problem = shortcuts.problem(self._name, shortcut, self._others, self._siblings)
         if problem:
             self._captured = None
             self._hint.set_label(problem)
@@ -115,6 +127,6 @@ class ShortcutDialog(Adw.AlertDialog):
 
     def _on_response(self, _, response):
         if response == "set" and self._captured:
-            self._on_chosen(self._captured)
-        elif response == "reset":
-            self._on_chosen(shortcuts.Shortcut.parse(shortcuts.DEFAULT_SHORTCUTS[self._name]))
+            self._on_chosen("set", self._captured)
+        elif response in ("remove", "reset"):
+            self._on_chosen(response, None)

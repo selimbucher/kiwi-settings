@@ -2,6 +2,7 @@ from gi.repository import Adw, GLib, Gtk
 
 from config import get, save
 from utils import shortcuts
+from widgets.rows import nix_managed
 from widgets.shortcut_dialog import ShortcutDialog
 
 ROWS = [
@@ -48,7 +49,7 @@ class KeybindsPage(Adw.PreferencesPage):
 
         self._group = Adw.PreferencesGroup(
             title="Kiwi Shell",
-            description="Select a keybind to change it.",
+            description="Select a keybind to change it, or + to add another.",
         )
         for name, note in ROWS:
             self._group.add(self._row(name, note, current, binds if check else None))
@@ -62,20 +63,39 @@ class KeybindsPage(Adw.PreferencesPage):
         self.add(self._group)
 
     def _row(self, name, note, current, binds):
-        shortcut = current[name]
-        subtitle = "Tap" if shortcut and shortcut.tap else note
+        found = current[name]
+        subtitle = "Tap" if len(found) == 1 and found[0].tap else note
         row = Adw.ActionRow(title=shortcuts.TITLES[name], subtitle=subtitle or "", activatable=True)
 
-        if shortcut and binds is not None and not self._registered(binds, name, shortcut):
+        if found and binds is not None and not any(self._registered(binds, name, s) for s in found):
             row.set_subtitle("Not active: Kiwi Shell isn't running")
 
-        if shortcut:
-            row.add_suffix(Gtk.ShortcutLabel(accelerator=shortcut.accelerator(), valign=Gtk.Align.CENTER))
+        if len(found) == 1:
+            row.add_suffix(Gtk.ShortcutLabel(accelerator=found[0].accelerator(), valign=Gtk.Align.CENTER))
+        # several: each its own button, to change or remove that one
+        for shortcut in found if len(found) > 1 else []:
+            button = Gtk.Button(
+                child=Gtk.ShortcutLabel(accelerator=shortcut.accelerator()),
+                valign=Gtk.Align.CENTER,
+                css_classes=["flat", "keybind"],
+                tooltip_text="Tap: change or remove" if shortcut.tap else "Change or remove",
+            )
+            button.connect("clicked", lambda _, s=shortcut: self._edit(name, current, s))
+            row.add_suffix(button)
+        if found:
+            add = Gtk.Button(
+                icon_name="list-add-symbolic",
+                valign=Gtk.Align.CENTER,
+                css_classes=["flat", "circular"],
+                tooltip_text="Add Another Keybind",
+            )
+            add.connect("clicked", lambda _: self._edit(name, current, None))
+            row.add_suffix(add)
         else:
             row.add_suffix(Gtk.Label(label="Not set", valign=Gtk.Align.CENTER, css_classes=["dim-label"]))
         row.add_suffix(Gtk.Image(icon_name="go-next-symbolic", css_classes=["dim-label"]))
-        row.connect("activated", lambda _: self._edit(name, current))
-        return row
+        row.connect("activated", lambda _: self._edit(name, current, found[0] if found else None))
+        return nix_managed(row, "shortcuts", name)
 
     @staticmethod
     def _registered(binds, name, shortcut):
@@ -95,15 +115,34 @@ class KeybindsPage(Adw.PreferencesPage):
             css_classes=[] if active else ["dim-label"],
         )
 
-    def _edit(self, name, current):
-        others = {n: s for n, s in current.items() if n != name}
-        dialog = ShortcutDialog(name, current[name], others, self._foreign, lambda s: self._set(name, s))
+    def _edit(self, name, current, shortcut):
+        """Change `shortcut`, one of the action's, or add one when None."""
+        others = {n: found for n, found in current.items() if n != name}
+        siblings = [s for s in current[name] if s != shortcut]
+        dialog = ShortcutDialog(
+            name, shortcut, others, self._foreign,
+            lambda response, new: self._chosen(name, current[name], shortcut, response, new),
+            siblings,
+        )
         dialog.present(self)
 
-    def _set(self, name, shortcut):
+    def _chosen(self, name, found, old, response, new):
+        if response == "reset":
+            self._set(name, shortcuts.DEFAULT_SHORTCUTS[name])
+            return
+        found = list(found)
+        if response == "remove":
+            found.remove(old)
+        elif old is None:
+            found.append(new)
+        else:
+            found[found.index(old)] = new
+        self._set(name, shortcuts.to_config(found))
+
+    def _set(self, name, config_value):
         value = dict(shortcuts.DEFAULT_SHORTCUTS)
         value.update(get("shortcuts") or {})
-        value[name] = str(shortcut) if shortcut else ""
+        value[name] = config_value
         save("shortcuts", value)
         self.refresh(check=False)
         # kiwi-shell re-registers within a moment; show the result

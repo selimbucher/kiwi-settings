@@ -1,8 +1,8 @@
 """kiwi-shell's configurable shortcuts ("shortcuts" in config.json).
 
 A shortcut is "Super", "Alt+Tab", "Super+space": modifiers joined with "+",
-then a key name. A lone modifier means tapping it. This mirrors
-kiwi-shell's src/kiwi-shell/shortcuts.ts.
+then a key name. A lone modifier means tapping it. An action with several
+has a list of them. This mirrors kiwi-shell's src/kiwi-shell/shortcuts.ts.
 """
 
 import json
@@ -80,7 +80,8 @@ class Shortcut:
         if self.tap:
             return [(mask, _BY_NAME[self.mods[0].lower()][4][0].upper())]
         combos = [(mask, self.key.upper())]
-        if role == "workspace_switcher":
+        # a switcher goes backwards with Shift
+        if role in HELD:
             combos.append((mask | 1, self.key.upper()))
         return combos
 
@@ -109,17 +110,35 @@ def tap_for(keyval):
 
 
 def configured(config_value, name):
-    """The shortcut in use for `name`; None for an optional one that isn't set."""
-    shortcut = Shortcut.parse((config_value or {}).get(name))
-    if shortcut is None or problem(name, shortcut, {}) is not None:
-        return Shortcut.parse(DEFAULT_SHORTCUTS[name])
-    return shortcut
+    """The shortcuts in use for `name`, a list; none for an optional one that isn't set."""
+    value = (config_value or {}).get(name)
+    texts = value if isinstance(value, list) else [value]
+    found = []
+    for text in texts:
+        shortcut = Shortcut.parse(text) if isinstance(text, str) else None
+        if shortcut is not None and problem(name, shortcut, {}) is None and shortcut not in found:
+            found.append(shortcut)
+    if not found:
+        default = Shortcut.parse(DEFAULT_SHORTCUTS[name])
+        return [default] if default else []
+    return found
 
 
-def problem(name, shortcut, others):
+def to_config(found):
+    """How config.json has `found`: one as a plain string, so a kiwi-shell from
+    before lists still reads it; several as a list; none as ""."""
+    if not found:
+        return ""
+    if len(found) == 1:
+        return str(found[0])
+    return [str(shortcut) for shortcut in found]
+
+
+def problem(name, shortcut, others, siblings=()):
     """Why `shortcut` can't be used for `name`, or None.
 
-    others: the other shortcuts, {name: Shortcut}.
+    others: the other actions' shortcuts, {name: [Shortcut]}.
+    siblings: the action's own other shortcuts.
     """
     if name in HELD:
         if shortcut.tap or len(shortcut.mods) != 1:
@@ -131,16 +150,19 @@ def problem(name, shortcut, others):
     elif not shortcut.tap and not shortcut.mods and not shortcut.key.startswith(("F", "XF86")):
         return "Add a modifier, or tap one on its own" if name == "launcher" else "Add a modifier"
 
-    for other_name, other in others.items():
-        if other_name == name or other is None:
+    if shortcut in siblings:
+        return "Already one of this action's shortcuts"
+    for other_name, found in others.items():
+        if other_name == name:
             continue
-        # a tap may share its modifier with a switcher; anything else can't overlap
-        if shortcut.tap or other.tap:
-            if shortcut.tap and other.tap and shortcut == other:
+        for other in found or []:
+            # a tap may share its modifier with a switcher; anything else can't overlap
+            if shortcut.tap or other.tap:
+                if shortcut.tap and other.tap and shortcut == other:
+                    return f"Already used by {TITLES[other_name]}"
+                continue
+            if set(shortcut.combos(name)) & set(other.combos(other_name)):
                 return f"Already used by {TITLES[other_name]}"
-            continue
-        if set(shortcut.combos(name)) & set(other.combos(other_name)):
-            return f"Already used by {TITLES[other_name]}"
     return None
 
 
