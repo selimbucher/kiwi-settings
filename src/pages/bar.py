@@ -1,4 +1,4 @@
-from gi.repository import Adw, Gtk
+from gi.repository import Adw, Gio, Gtk
 
 from config import DEFAULTS, get, save
 from widgets.rows import combo_row, spin_row
@@ -38,12 +38,28 @@ def island_switch(key, title, subtitle):
     return row
 
 
+def clock_row():
+    """The desktop's clock format (GNOME's own key), which the shell's clock
+    and GTK apps follow; None where the schema isn't installed."""
+    schema = Gio.SettingsSchemaSource.get_default().lookup("org.gnome.desktop.interface", True)
+    if not schema or not schema.has_key("clock-format"):
+        return None
+    settings = Gio.Settings(schema_id="org.gnome.desktop.interface")
+    row = Adw.SwitchRow(title="24-Hour Time", subtitle="Otherwise 2:05 PM")
+    row.set_active(settings.get_string("clock-format") != "12h")
+    row.connect("notify::active", lambda r, _: settings.set_string("clock-format", "24h" if r.get_active() else "12h"))
+    return row
+
+
 class BarPage(Adw.PreferencesPage):
     def __init__(self):
         super().__init__()
 
         bar_group = Adw.PreferencesGroup(title="Status Bar")
         bar_group.add(spin_row("bar_margin", "Margin", 0, 12, "Gap to tiled windows, in pixels"))
+        clock = clock_row()
+        if clock:
+            bar_group.add(clock)
         self.add(bar_group)
 
         island_group = Adw.PreferencesGroup(

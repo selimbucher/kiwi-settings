@@ -24,7 +24,8 @@ WORDING = {
     ),
     "installed": (
         "Built, but not loaded",
-        "Load it, and add `exec-once = hyprpm reload -n` to your Hyprland config.",
+        "Load it, and have your Hyprland config run `hyprpm reload -n` at start "
+        "(in hyprland.lua, inside hl.on(\"hyprland.start\", …)).",
     ),
     "missing": (
         "Not installed",

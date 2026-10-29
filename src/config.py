@@ -3,7 +3,18 @@ import os
 import re
 
 HOME = os.path.expanduser("~")
-CONFIG_FOLDER = os.path.join(HOME, ".config", "kiwi-shell")
+
+
+def _config_folder():
+    """Where kiwi-shell and the home-manager module have it too. Older
+    versions kept it in ~/.config whatever XDG_CONFIG_HOME said: one there,
+    and none where it says, is the one."""
+    folder = os.path.join(os.environ.get("XDG_CONFIG_HOME") or os.path.join(HOME, ".config"), "kiwi-shell")
+    legacy = os.path.join(HOME, ".config", "kiwi-shell")
+    return legacy if not os.path.isdir(folder) and os.path.isdir(legacy) else folder
+
+
+CONFIG_FOLDER = _config_folder()
 CONFIG_FILE = os.path.join(CONFIG_FOLDER, "config.json")
 # what Home Manager sets (services.kiwi-shell.settings): kiwi-shell lays it
 # over config.json, so those settings are Home Manager's to change
