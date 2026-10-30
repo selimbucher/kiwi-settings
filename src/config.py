@@ -43,6 +43,7 @@ DEFAULTS = {
     "dock_arpeggio": False,
     "indicator_bar_position": "bottom",
     "auto_nightshift": False,
+    "nightshift_schedule": "custom",
     "nightshift_start": "20:30",
     "nightshift_end": "06:00",
     "nightshift_intensity": 4000,
