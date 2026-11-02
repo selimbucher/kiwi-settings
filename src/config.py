@@ -39,6 +39,7 @@ DEFAULTS = {
     "desktop_icons": True,
     "desktop_free_placement": True,
     "popup_monitor": "active",
+    "interface_scale": {},
     "search_engine": "duckduckgo",
     "dock_arpeggio": False,
     "indicator_bar_position": "bottom",
@@ -60,7 +61,7 @@ DEFAULTS = {
     "shortcuts": {
         "launcher": "Super",
         "app_switcher": "Alt+Tab",
-        "mission_control": "Ctrl+Super+Up",
+        "mission_control": "Super+Tab",
         "desktop_left": "Ctrl+Super+Left",
         "desktop_right": "Ctrl+Super+Right",
         "workspace_switcher": "",

@@ -1,6 +1,7 @@
-from gi.repository import Adw, Gdk, Gio, GLib, Gtk
+from gi.repository import Adw, Gdk, GLib, Gtk
 
 from config import get, managed, save
+from utils.shell import ask
 from widgets.rows import nix_managed
 
 SCHEDULES = [("off", "Off"), ("sunset", "Sunset to Sunrise"), ("custom", "Custom")]
@@ -8,23 +9,9 @@ SCHEDULES = [("off", "Off"), ("sunset", "Sunset to Sunrise"), ("custom", "Custom
 
 def _preview(kelvin):
     """The warmth shown on screen at once, on or off, while it is chosen; None
-    for the choosing done. Asked of the running shell (its request over D-Bus,
-    as kiwictl asks), not written to the settings at every step of a drag."""
-    args = ["night-shift-preview", "end" if kelvin is None else str(int(kelvin))]
-    try:
-        bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
-        bus.call("io.Astal.ags", "/io/Astal/Application", "io.Astal.Application", "Request",
-                 GLib.Variant("(as)", (args,)), GLib.VariantType("(s)"), Gio.DBusCallFlags.NONE,
-                 1000, None, lambda b, r: _finish(b, r))
-    except GLib.Error:
-        pass
-
-
-def _finish(bus, result):
-    try:
-        bus.call_finish(result)
-    except GLib.Error:
-        pass  # the shell isn't running: nothing to show it on
+    for the choosing done. Asked of the running shell, not written to the
+    settings at every step of a drag."""
+    ask(["night-shift-preview", "end" if kelvin is None else str(int(kelvin))])
 
 
 class NightShiftPage(Adw.PreferencesPage):
@@ -65,11 +52,13 @@ class NightShiftPage(Adw.PreferencesPage):
         scale = Gtk.Scale.new_with_range(Gtk.Orientation.HORIZONTAL, 3000, 6000, 100)
         scale.set_inverted(True)
         scale.set_draw_value(False)
-        scale.set_size_request(180, -1)
+        scale.set_size_request(200, -1)
         scale.set_value(get("nightshift_intensity"))
-        warmth_box.append(Gtk.Label(label="Less Warm", css_classes=["dim-label", "caption"]))
+        warmth_box.append(Gtk.Image(icon_name="weather-snow-night-symbolic", css_classes=["dim-label"],
+                                    tooltip_text="Less Warm"))
         warmth_box.append(scale)
-        warmth_box.append(Gtk.Label(label="More Warm", css_classes=["dim-label", "caption"]))
+        warmth_box.append(Gtk.Image(icon_name="temperature-symbolic", css_classes=["dim-label"],
+                                    tooltip_text="More Warm"))
         warmth_row.add_suffix(warmth_box)
         group.add(nix_managed(warmth_row, "nightshift_intensity"))
         self._warmth(scale)

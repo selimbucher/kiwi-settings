@@ -10,6 +10,7 @@ from utils.wallpaper import get_wallpaper_path, pictures_folder, same_included, 
 from widgets.glass_slider import GlassSlider
 from widgets.hue_strip import HueStrip
 from widgets.font_row import FontRow
+from widgets.interface_size import InterfaceSizeGroup
 from widgets.rows import switch_row
 from widgets.style_switcher import StyleSwitcher, interface_settings
 from widgets.wallpaper_grid import WallpaperGrid
@@ -44,6 +45,7 @@ class AppearancePage(Adw.PreferencesPage):
         )
         shell_group.add(FontRow())
         self.add(shell_group)
+        self.add(InterfaceSizeGroup())
 
         wallpaper_group = Adw.PreferencesGroup(title="Wallpaper")
         choose_button = Gtk.Button(label="Choose Picture…", valign=Gtk.Align.CENTER, css_classes=["flat"])

@@ -13,7 +13,7 @@ from gi.repository import Gdk, Gtk
 DEFAULT_SHORTCUTS = {
     "launcher": "Super",
     "app_switcher": "Alt+Tab",
-    "mission_control": "Ctrl+Super+Up",
+    "mission_control": "Super+Tab",
     "desktop_left": "Ctrl+Super+Left",
     "desktop_right": "Ctrl+Super+Right",
     # the classic workspace switcher, held like the app switcher; none by default
